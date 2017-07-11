@@ -2,7 +2,6 @@
 import requests as req
 from msg import Msg
 import threading
-import random
 from foaas import fuck
 from urllib.parse import urlparse
 from socketIO_client import SocketIO, BaseNamespace
@@ -70,21 +69,6 @@ class Client(BaseNamespace):
         data = Msg({'msg': fmsg.text})
         self.sendmsg(data)
         return True
-
-    def chat_love(self, *args):
-        msgs = ['%s\'n %s sittin\' in a tree...',
-                '%s wants to ride %s\'s face.',
-                'I now pronounce you Mr and Ms %s-%s',
-                '%s, you owe some perds to %s for that one.']
-        if len(args[0]) < 2:
-            from_ = args[-1]['username']
-        else:
-            from_ = args[0][1]
-        if len(args[0]):
-            to_ = args[0][0]
-        else:
-            to_ = self.username
-        self.sendmsg(random.choice(msgs) % (to_, from_))
 
     def chat_jumble(self, msg):
         if msg['match']:
@@ -195,5 +179,4 @@ def connect(channel, username, password):
 
 
 if __name__ == '__main__':
-    #    connect('fullmoviesonyoutube', 'slutbot', 'sundrop')
-    connect('tete', 'imbdbot', 'sundrop')
+    connect('chan', 'username', 'password')
