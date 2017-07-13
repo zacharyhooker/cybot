@@ -4,7 +4,7 @@ import re
 class Msg:
     def __init__(self, data):
         default = {'username': None, 'msg': None, 'text': None,
-                   'meta': None, 'to': None, 'time': None}
+                   'meta': {}, 'to': None, 'time': None}
         default.update(data)
         self.username = default['username']
         if 'body' in default:

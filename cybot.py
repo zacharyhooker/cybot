@@ -1,9 +1,15 @@
 # encoding: utf-8
+import logging as log
 import requests as req
 from msg import Msg
 import threading
 from foaas import fuck
 from socketIO_client import BaseNamespace
+
+
+log.getLogger(__name__).addHandler(
+    log.NullHandler())
+log.basicConfig(level=log.INFO)
 
 
 def check_init(func):
@@ -69,19 +75,25 @@ class Client(BaseNamespace):
         self.sendmsg(data)
         return True
 
-    def chat_jumble(self, msg):
-        if msg['match']:
-            x = req.get('http://www.anagramica.com/best/' + msg['match'])
-            word = x.json()['best'][0]
-            print('Anagram Guessing:' + word)
-            if len(msg['match']) == len(word):
-                self.sendmsg('$j ' + word)
+    def chat_jumble(self, msg, *args):
+        args = [item for sublist in args for item in sublist]
+        x = req.get('http://www.anagramica.com/best/' + args[0])
+        word = x.json()['best'][0]
+        log.info('Anagram Guessing:' + word)
+        if len(args[0]) == len(word):
+            data = {'body': '$j ' + word}
+            self.sendmsg(Msg(data))
+
+    def chat_catboy(self, msg, *args):
+        data = {'body': 'Meow'}
+        self.sendmsg(Msg(data))
 
     def sendmsg(self, msg):
         if(msg.to):
             self.emit('pm', {'msg': msg.body, 'meta': {}, 'to': msg.to})
         else:
-            self.emit('chatMsg', {'msg': msg.body, 'meta': {}})
+            self.emit('chatMsg', {'msg': msg.body, 'meta': msg.meta})
+        log.debug(msg)
 
     def handout(self):
         t = threading.Timer(60 * 61, self.handout)
@@ -92,31 +104,35 @@ class Client(BaseNamespace):
     @check_init
     def handle_msg(self, msg):
         ret = False
+        cmd = ''
+        cnt = False
         if(msg.text.startswith('!')):
             cmd = msg.text.split()
-            call = cmd[0][1:]
+            dir_cmd = cmd[0][1:]
             args = cmd[1:]
+            cnt = True
         if(self.route):
-            for user, funcs in self.route:
+            for user in self.route:
                 if(msg.username == user):
-                    for func, sstr in funcs:
-                        match = msg.search_body(sstr)
+                    for func in self.route[user]:
+                        match = msg.search_body(self.route[user][func])
                         if(match):
-                            cmd = func
+                            dir_cmd = func
                             args = match
-        call = 'chat_' + cmd
-        if(msg.to):  # It's a PM
-            call = 'pm_' + cmd
-        try:
-            func = getattr(self, call)
-            if callable(func):
-                ret = func(msg, args)
-        except Exception as e:
-            print('Exception[%s]: %s' % (e, msg))
-            if not ret:
-                data = {'body': '(%s) failed to run.' % (cmd[0]),
+                            cnt = True
+        if(cnt):
+            call = 'chat_' + dir_cmd
+            if(msg.to):  # It's a PM
+                call = 'pm_' + dir_cmd
+            try:
+                func = getattr(self, call.lower())
+                if callable(func):
+                    ret = func(msg, args)
+            except Exception as e:
+                log.error('Exception[%s]: %s' % (e, msg))
+                data = {'body': '(%s) failed to run.' % (cmd),
                         'to': msg.username}
-        self.sendmsg(Msg(data))
+                # self.sendmsg(Msg(data))
 
     def on_chatMsg(self, omsg):
         msg = Msg(omsg)
@@ -142,7 +158,7 @@ class Client(BaseNamespace):
         self.userlist.append(args[0])
 
     def on_connect(self):
-        print('[Connected]')
+        log.info('[Connected]')
 
     def on_event(self, *args):
         pass
