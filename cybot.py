@@ -59,6 +59,9 @@ class Client(BaseNamespace):
         self.emit('login', {'name': username, 'pw': password})
 
     def chat_voteskip(self, msg, *args):
+        """An example of executing arbitrary messages through chat.
+        Stores all media in `media`. Flags the skips.
+        """
         sent = False
         if(self.media and self.media['id'] not in self.voteskips):
             self.emit('voteskip', {})
@@ -76,6 +79,13 @@ class Client(BaseNamespace):
         return True
 
     def chat_jumble(self, msg, *args):
+        """Attempts to solve an anagram based on letters parsed from handle_msg
+        Requests calls based on the arguments and the whole Msg.
+
+        Args:
+            match (str): The anagram which has been parsed from the Msg
+            to be solved to an english word
+        """
         args = [item for sublist in args for item in sublist]
         x = req.get('http://www.anagramica.com/best/' + args[0])
         word = x.json()['best'][0]
@@ -130,9 +140,10 @@ class Client(BaseNamespace):
                     ret = func(msg, args)
             except Exception as e:
                 log.error('Exception[%s]: %s' % (e, msg))
-                data = {'body': '(%s) failed to run.' % (cmd),
-                        'to': msg.username}
-                # self.sendmsg(Msg(data))
+#               data = {'body': '(%s) failed to run.' % (cmd),
+#                       'to': msg.username}
+        return ret
+#           self.sendmsg(Msg(data))
 
     def on_chatMsg(self, omsg):
         msg = Msg(omsg)

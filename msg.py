@@ -1,5 +1,9 @@
 import re
 
+"""
+TODO: Generic init for SocketIO emits
+"""
+
 
 class Msg:
     def __init__(self, data):
