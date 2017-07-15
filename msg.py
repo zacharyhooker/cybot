@@ -6,7 +6,11 @@ TODO: Generic init for SocketIO emits
 
 
 class Msg:
-    def __init__(self, data):
+    def __init__(self, data, **kwargs):
+        """TODO: Data to become body/text of message, kwargs to
+        expand into secondary/non-essential features of a message.
+        Most Msgs sent over Socketio have a similar attributes.
+        Generalize field names."""
         default = {'username': None, 'msg': None, 'text': None,
                    'meta': {}, 'to': None, 'time': None}
         default.update(data)

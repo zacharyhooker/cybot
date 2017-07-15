@@ -4,6 +4,7 @@ import requests as req
 from msg import Msg
 import threading
 from foaas import fuck
+import random
 from socketIO_client import BaseNamespace
 
 
@@ -69,8 +70,28 @@ class Client(BaseNamespace):
             sent = True
         return sent
 
+    def chat_love(self, msg, *args):
+        responses = {
+            # username: response
+            'catboy': 'Meow, meow. Meow. <3 %s',
+            'bdizzle': 'Please no.',
+            'generic':
+                [
+                    'I love you %s! -%s',
+                    '%s is the best. -%s',
+                    '%s: Thanks for everything, %s.'
+                ]
+        }
+        data = {'msg': 'No love.'}
+        if(msg.username in responses):
+            data['msg'] = responses[msg.username].format(args[0], msg.username)
+        else:
+            data['msg'] = random.choice(
+                responses['generic']).format(args[0], msg.username)
+
+        self.sendmsg(Msg(data))
+
     def chat_fuck(self, msg, *args):
-        args = [item for sublist in args for item in sublist]
         fmsg = fuck.random(from_=msg.username)
         if len(args) > 0:
             fmsg = fuck.random(from_=msg.username, name=args[0])
@@ -86,7 +107,6 @@ class Client(BaseNamespace):
             match (str): The anagram which has been parsed from the Msg
             to be solved to an english word
         """
-        args = [item for sublist in args for item in sublist]
         x = req.get('http://www.anagramica.com/best/' + args[0])
         word = x.json()['best'][0]
         log.info('Anagram Guessing:' + word)
@@ -137,7 +157,7 @@ class Client(BaseNamespace):
             try:
                 func = getattr(self, call.lower())
                 if callable(func):
-                    ret = func(msg, args)
+                    ret = func(msg, *args)
             except Exception as e:
                 log.error('Exception[%s]: %s' % (e, msg))
 #               data = {'body': '(%s) failed to run.' % (cmd),
