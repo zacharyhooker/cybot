@@ -27,21 +27,21 @@ def check_init(func):
 
 class Client(BaseNamespace):
 
-    route = {
-        'imdbot':
-        {
-            'perds': '\[([^\s]+) [0-9]+ :perdgive: #!# ([0-9]*)',
-            'jumble': 'word: (.*)\]'
-        }
-    }
-
     def initialize(self):
         """Secondary __init__ created for the SocketIO_client instantiation method
         """
         self.voteskips = []
+        self.response = {}
+        self.route = {}
         self.userlist = []
         self.media = []
         self.init = False
+
+    def config(self, config):
+        if 'response' in config:
+            self.response = config['response']
+        if 'route' in config:
+            self.route = config['route']
 
     def login(self, channel, username, password):
         """Simple login to the websocket. Emits the params to the
@@ -74,23 +74,13 @@ class Client(BaseNamespace):
             exit()
 
     def chat_love(self, msg, *args):
-        responses = {
-            # username: response
-            'catboy': 'Meow, meow. Meow. <3 %s',
-            'bdizzle': 'Please no.',
-            'generic':
-                [
-                    'I love you %s! -%s',
-                    '%s is the best. -%s',
-                    '%s: Thanks for everything, %s.'
-                ]
-        }
         data = {'msg': 'No love.'}
-        if(msg.username in responses):
-            data['msg'] = responses[msg.username].format(args[0], msg.username)
+        if(msg.username in self.response):
+            data['msg'] = self.response[
+                msg.username].format(args[0], msg.username)
         else:
             data['msg'] = random.choice(
-                responses['generic']).format(args[0], msg.username)
+                self.response['generic']).format(args[0], msg.username)
 
         self.sendmsg(Msg(data))
 
@@ -194,6 +184,11 @@ class Client(BaseNamespace):
     def on_connect(self):
         log.info('[Connected]')
         self.handout()
+
+    def on_login(self, *args):
+        if(not args[0]['success']):
+            log.error(args[0]['error'])
+            raise SystemExit
 
     def on_event(self, *args):
         pass
