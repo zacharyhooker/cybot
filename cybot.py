@@ -42,7 +42,6 @@ class Client(BaseNamespace):
         self.userlist = []
         self.media = []
         self.init = False
-        self.handout()
 
     def login(self, channel, username, password):
         """Simple login to the websocket. Emits the params to the
@@ -69,6 +68,10 @@ class Client(BaseNamespace):
             self.voteskips.append(self.media['id'])
             sent = True
         return sent
+
+    def pm_kill(self, msg, *args):
+        if(msg.username == 'zim'):
+            exit()
 
     def chat_love(self, msg, *args):
         responses = {
@@ -190,6 +193,7 @@ class Client(BaseNamespace):
 
     def on_connect(self):
         log.info('[Connected]')
+        self.handout()
 
     def on_event(self, *args):
         pass
