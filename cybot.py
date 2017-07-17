@@ -5,7 +5,8 @@ from msg import Msg
 import threading
 from foaas import fuck
 import random
-from socketIO_client import BaseNamespace
+from socketIO_client import BaseNamespace, SocketIO
+from urllib.parse import urlparse
 
 
 log.getLogger(__name__).addHandler(
@@ -15,7 +16,7 @@ log.basicConfig(level=log.INFO)
 
 def check_init(func):
     """If the init var is not set we need to wait to call the function
-    until the client has fully initialized"""
+    until the client has fully initialized | Decorator"""
 
     def wrapper(self, *args, **kwargs):
         if not self.init:
@@ -23,6 +24,17 @@ def check_init(func):
         else:
             return func(self, *args, **kwargs)
     return wrapper
+
+
+def cytube(config):
+    url = 'http://%s/socketconfig/%s.json' % ('cytu.be', config['channel'])
+    server_list = req.get(url).json()['servers']
+    server = [i['url'] for i in server_list if i['secure'] is False][0]
+    url = urlparse(server)
+    sio = SocketIO(url.hostname, url.port, Client)
+    instance = sio.get_namespace()
+    instance.config(config)
+    sio.wait()
 
 
 class Client(BaseNamespace):
@@ -42,6 +54,9 @@ class Client(BaseNamespace):
             self.response = config['response']
         if 'route' in config:
             self.route = config['route']
+        if all(k in config for k in ('channel', 'username', 'password')):
+            self.login(config['channel'], config['username'],
+                       config['password'])
 
     def login(self, channel, username, password):
         """Simple login to the websocket. Emits the params to the
