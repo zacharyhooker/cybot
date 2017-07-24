@@ -5,8 +5,9 @@ from msg import Msg
 import threading
 from foaas import fuck
 import random
-from socketIO_client import BaseNamespace, SocketIO
+from socketIO_client_nexus import BaseNamespace, SocketIO
 from urllib.parse import urlparse
+import gspread
 
 
 log.getLogger(__name__).addHandler(
@@ -24,17 +25,6 @@ def check_init(func):
         else:
             return func(self, *args, **kwargs)
     return wrapper
-
-
-def cytube(config):
-    url = 'http://%s/socketconfig/%s.json' % ('cytu.be', config['channel'])
-    server_list = req.get(url).json()['servers']
-    server = [i['url'] for i in server_list if i['secure'] is False][0]
-    url = urlparse(server)
-    sio = SocketIO(url.hostname, url.port, Client)
-    instance = sio.get_namespace()
-    instance.config(config)
-    sio.wait()
 
 
 class Client(BaseNamespace):
@@ -106,6 +96,12 @@ class Client(BaseNamespace):
         data = Msg({'msg': fmsg.text})
         self.sendmsg(data)
         return True
+
+    def chat_rate(self, msg, *args):
+        if(args[0]):
+            print('rated %s, %s, %s %s' %
+                  (self.media['id'], self.media['title'],
+                   self.media['type'], args[0]))
 
     def chat_jumble(self, msg, *args):
         """Attempts to solve an anagram based on letters parsed from handle_msg
@@ -225,3 +221,14 @@ class Client(BaseNamespace):
 
     def on_mediaUpdate(self, *args):
         pass
+
+
+def cytube(config):
+    url = 'http://%s/socketconfig/%s.json' % ('cytu.be', config['channel'])
+    server_list = req.get(url).json()['servers']
+    server = [i['url'] for i in server_list if i['secure'] is False][0]
+    url = urlparse(server)
+    sio = SocketIO(url.hostname, url.port, Client)
+    instance = sio.get_namespace()
+    instance.config(config)
+    sio.wait()
