@@ -98,6 +98,9 @@ class Client(BaseNamespace):
         return True
 
     def chat_rate(self, msg, *args):
+        """TODO: If the socket app does not support media, allow this to wait
+        for a callback; this will let users rate functionality?
+        (SCOPE CREEP)"""
         if(args[0]):
             print('rated %s, %s, %s %s' %
                   (self.media['id'], self.media['title'],
