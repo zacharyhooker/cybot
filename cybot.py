@@ -7,8 +7,8 @@ from foaas import fuck
 import random
 from socketIO_client_nexus import BaseNamespace, SocketIO
 from urllib.parse import urlparse
-import gspread
-
+import pprint
+from datetime import datetime
 
 log.getLogger(__name__).addHandler(
     log.NullHandler())
@@ -177,8 +177,7 @@ class Client(BaseNamespace):
         self.handle_msg(msg)
 
     def on_changeMedia(self, *args):
-        if(args[0]['id']):
-            self.media = args[0]
+        pass
 
     def on_userlist(self, *args):
         self.userlist = args[0]
@@ -218,6 +217,15 @@ class Client(BaseNamespace):
 
     def on_setPlaylistMeta(self, *args):
         pass
+
+    def on_playlist(self, *args):
+        data = {}
+        if(args[0][0]):
+            media = args[0][0]['media']
+            data[media['id']] = media
+            data[media['id']]['directlink'] = 'https://drive.google.com/file/d/' + media['id']
+            data[media['id']]['datetime'] = datetime.now()
+            self.media.append(data)
 
     def on_channelOpts(self, *args):
         pass
