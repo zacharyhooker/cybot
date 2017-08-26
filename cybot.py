@@ -7,7 +7,6 @@ from foaas import fuck
 import random
 from socketIO_client_nexus import BaseNamespace, SocketIO
 from urllib.parse import urlparse
-import pprint
 from datetime import datetime
 
 log.getLogger(__name__).addHandler(
@@ -164,6 +163,7 @@ class Client(BaseNamespace):
             try:
                 func = getattr(self, call.lower())
                 if callable(func):
+                    log.info('%s : %s'%(func.__name__, msg))
                     ret = func(msg, *args)
             except Exception as e:
                 log.error('Exception[%s]: %s' % (e, msg))
@@ -177,6 +177,11 @@ class Client(BaseNamespace):
         self.handle_msg(msg)
 
     def on_changeMedia(self, *args):
+        for vid in args:
+            if 'meta' in vid and 'gdrive_subtitles' in vid['meta']:
+                vid['directlink'] = 'https://drive.google.com/file/d/'+vid['id']
+            self.media.append(vid)
+            log.info(vid)
         pass
 
     def on_userlist(self, *args):
@@ -196,7 +201,7 @@ class Client(BaseNamespace):
 
     def on_connect(self):
         log.info('[Connected]')
-        self.handout()
+        #self.handout()
 
     def on_login(self, *args):
         if(not args[0]['success']):
