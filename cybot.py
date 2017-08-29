@@ -66,6 +66,9 @@ class Client(BaseNamespace):
         """An example of executing arbitrary messages through chat.
         Stores all media in `media`. Flags the skips.
         """
+        msg.to = msg.username
+        msg.body = "Be sure to tip your bot!"
+        self.sendmsg(msg)
         self.emit('voteskip', {})
 
     def pm_kill(self, msg, *args):
