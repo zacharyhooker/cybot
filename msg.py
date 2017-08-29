@@ -38,6 +38,6 @@ class Msg:
 
     def __str__(self):
         tmp = self.__dict__
-        if 'text' in tmp:
+        if 'text' in tmp:   
             tmp.pop('body', None)
         return str(tmp)

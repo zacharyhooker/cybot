@@ -66,12 +66,7 @@ class Client(BaseNamespace):
         """An example of executing arbitrary messages through chat.
         Stores all media in `media`. Flags the skips.
         """
-        sent = False
-        if(self.media and self.media['id'] not in self.voteskips):
-            self.emit('voteskip', {})
-            self.voteskips.append(self.media['id'])
-            sent = True
-        return sent
+        self.emit('voteskip', {})
 
     def pm_kill(self, msg, *args):
         if(msg.username == 'zim'):
@@ -163,7 +158,7 @@ class Client(BaseNamespace):
             try:
                 func = getattr(self, call.lower())
                 if callable(func):
-                    log.info('%s : %s'%(func.__name__, msg))
+                    log.info('%s : %s' % (func.__name__, msg))
                     ret = func(msg, *args)
             except Exception as e:
                 log.error('Exception[%s]: %s' % (e, msg))
@@ -179,7 +174,7 @@ class Client(BaseNamespace):
     def on_changeMedia(self, *args):
         for vid in args:
             if 'meta' in vid and 'gdrive_subtitles' in vid['meta']:
-                vid['directlink'] = 'https://drive.google.com/file/d/'+vid['id']
+                vid['directlink'] = 'https://drive.google.com/file/d/' + vid['id']
             self.media.append(vid)
             log.info(vid)
         pass
@@ -201,7 +196,7 @@ class Client(BaseNamespace):
 
     def on_connect(self):
         log.info('[Connected]')
-        #self.handout()
+        # self.handout()
 
     def on_login(self, *args):
         if(not args[0]['success']):
@@ -228,7 +223,8 @@ class Client(BaseNamespace):
         if(args[0][0]):
             media = args[0][0]['media']
             data[media['id']] = media
-            data[media['id']]['directlink'] = 'https://drive.google.com/file/d/' + media['id']
+            data[media['id']][
+                'directlink'] = 'https://drive.google.com/file/d/' + media['id']
             data[media['id']]['datetime'] = datetime.now()
             self.media.append(data)
 
