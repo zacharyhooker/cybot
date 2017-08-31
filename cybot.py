@@ -78,8 +78,9 @@ class Client(BaseNamespace):
     def chat_love(self, msg, *args):
         data = {'msg': 'No love.'}
         if(msg.username in self.response):
+            to = args[0] if args else self.username
             data['msg'] = self.response[
-                msg.username].format(args[0], msg.username)
+                msg.username].format(to, msg.username)
         else:
             data['msg'] = random.choice(
                 self.response['generic']).format(args[0], msg.username)
@@ -119,8 +120,14 @@ class Client(BaseNamespace):
             self.sendmsg(Msg(data))
 
     def chat_catboy(self, msg, *args):
-        data = {'body': 'Meow'}
+        data = {'body': ':catfap:'}
         self.sendmsg(Msg(data))
+
+    def chat_auto(self, msg, *args):
+        if(msg.username == 'catboy'):
+            if random.random() < 0.20:
+                data = {'body': 'meow'}
+                self.sendmsg(Msg(data))
 
     def sendmsg(self, msg):
         if(msg.to):
@@ -223,11 +230,14 @@ class Client(BaseNamespace):
 
     def on_playlist(self, *args):
         data = {}
-        if(args[0][0]):
+
+        if(args[0] and args[0][0]):
             media = args[0][0]['media']
             data[media['id']] = media
-            data[media['id']][
-                'directlink'] = 'https://drive.google.com/file/d/' + media['id']
+            if(data[media['id']][
+                    'directlink']):
+                data[media['id']][
+                    'directlink'] = 'https://drive.google.com/file/d/' + media['id']
             data[media['id']]['datetime'] = datetime.now()
             self.media.append(data)
 

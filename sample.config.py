@@ -12,13 +12,13 @@ config = {
         }
     },
     'response': {
-        'catboy': 'Meow, meow. Meow. <3 %s',
+        'catboy': 'Meow, meow. Meow. <3 {}',
         'bdizzle': 'Please no.',
         'generic':
         [
-            'I love you %s! -%s',
-            '%s is the best. -%s',
-            '%s: Thanks for everything, %s.'
+            'I love you {}! -{}',
+            '{} is the best. -{}',
+            '{}: Thanks for everything, {}.'
         ]
     }
 }
