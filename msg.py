@@ -6,6 +6,7 @@ TODO: Generic init for SocketIO emits
 
 
 class Msg:
+
     def __init__(self, data, **kwargs):
         """TODO: Data to become body/text of message, kwargs to
         expand into secondary/non-essential features of a message.
@@ -14,7 +15,8 @@ class Msg:
         default = {'username': None, 'msg': None, 'text': None,
                    'meta': {}, 'to': None, 'time': None}
         default.update(data)
-        self.username = default['username']
+        self.username = default['username'].lower() if default[
+            'username'] else default['username']
         if 'body' in default:
             self.body = default['body']
         elif 'msg' in default:
@@ -38,6 +40,6 @@ class Msg:
 
     def __str__(self):
         tmp = self.__dict__
-        if 'text' in tmp:   
+        if 'text' in tmp:
             tmp.pop('body', None)
         return str(tmp)

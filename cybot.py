@@ -234,8 +234,7 @@ class Client(BaseNamespace):
         if(args[0] and args[0][0]):
             media = args[0][0]['media']
             data[media['id']] = media
-            if(data[media['id']][
-                    'directlink']):
+            if('directlink' in data[media['id']]):
                 data[media['id']][
                     'directlink'] = 'https://drive.google.com/file/d/' + media['id']
             data[media['id']]['datetime'] = datetime.now()
