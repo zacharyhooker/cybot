@@ -147,11 +147,6 @@ class Client(BaseNamespace):
         ret = False
         cmd = ''
         cnt = False
-        if(msg.text.startswith('!')):
-            cmd = msg.text.split()
-            dir_cmd = cmd[0][1:]
-            args = cmd[1:]
-            cnt = True
         if(self.route):
             for user in self.route:
                 if(msg.username == user):
@@ -161,6 +156,11 @@ class Client(BaseNamespace):
                             dir_cmd = func
                             args = match
                             cnt = True
+        if(msg.text.startswith('!')):
+            cmd = msg.text.split()
+            dir_cmd = cmd[0][1:]
+            args = cmd[1:]
+            cnt = True
         if(cnt):
             call = 'chat_' + dir_cmd
             if(msg.to):  # It's a PM
