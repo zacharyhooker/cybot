@@ -104,7 +104,6 @@ class Client(BaseNamespace):
             movie = movie.replace('.', ' ')
             movie = regex.sub('', movie)
             response = search.movie(query=movie)
-            print(movie)
             if search.results:
                 mid = search.results[0]['id']
             else:
@@ -115,8 +114,6 @@ class Client(BaseNamespace):
                 if 'results' in videos:
                     for t in videos['results']:
                         if t['type'] == 'Trailer':
-                            if any(t['key'] in s for s in self.media):
-                                break
                             vids[
                                 search.results[0]['title']] = t['key']
                             break
@@ -126,8 +123,9 @@ class Client(BaseNamespace):
                 self.sendmsg(msg)
                 for user in self.userlist:
                     if(user['name'] == msg.username and user['rank'] > 1):
+                        if any(t['key'] in s for s in self.media):
+                            break
                         self.queue(vid, True)
-                        break
 
     def chat_fuck(self, msg, *args):
         fmsg = fuck.random(from_=msg.username)
