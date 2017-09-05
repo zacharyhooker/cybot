@@ -127,7 +127,7 @@ class Client(BaseNamespace):
         self.sendmsg(data)
         return True
 
-    def chat_queue(self, msg, *args):
+    def queue(self, msg, *args):
         self.queue(args, True)
 
     def chat_rate(self, msg, *args):
