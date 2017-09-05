@@ -122,10 +122,17 @@ class Client(BaseNamespace):
                 msg.body = title + ': http://youtube.com/watch?v=' + vid
                 self.sendmsg(msg)
                 for user in self.userlist:
-                    if(user['name'] == msg.username and user['rank'] > 1):
+                    if(user['name'].lower() == msg.username.lower() and user['rank'] > 1):
                         if any(t['key'] in s for s in self.media):
-                            break
-                        self.queue(vid, True)
+                            msg.body = title + ' already exists in queue.'
+                            self.sendmsg(msg)
+                        else:
+                            self.queue(vid, True)
+
+    def chat_debug(self, msg, *args):
+        for x in self.media:
+            msg.body = ''.join(x)
+            self.sendmsg(msg)
 
     def chat_fuck(self, msg, *args):
         fmsg = fuck.random(from_=msg.username)
@@ -179,6 +186,7 @@ class Client(BaseNamespace):
     def queue(self, url, after=False):
         data = {"id": url, "type": "yt", "pos": "next", "temp": True}
         self.emit('queue', data)
+        self.media.append(url)
 
     def sendadminmsg(self, msg):
         msg = {'username': None, 'rank': 0}
@@ -238,10 +246,14 @@ class Client(BaseNamespace):
         self.handle_msg(msg)
 
     def on_changeMedia(self, *args):
+        try:
+            self.media.remove(args[0]['id'])
+        except Exception as e:
+            return
         for vid in args:
             if 'meta' in vid and 'gdrive_subtitles' in vid['meta']:
                 vid['directlink'] = 'https://drive.google.com/file/d/' + vid['id']
-            self.media.append(vid)
+            # self.media.append(vid)
             log.info(vid)
         pass
 
@@ -255,6 +267,14 @@ class Client(BaseNamespace):
     def on_userlist(self, *args):
         self.userlist = args[0]
         self.init = True
+
+    def on_queue(self, *args):
+        for arg in args:
+            for media in arg:
+                if 'media' in media:
+                    if media['media']['id'] not in self.media:
+                        self.media.append(media['media']['id'])
+        # self.media.append(args)
 
     def on_pm(self, omsg):
         msg = Msg(omsg)
@@ -277,6 +297,7 @@ class Client(BaseNamespace):
             raise SystemExit
 
     def on_event(self, *args):
+        print(args)
         pass
 
     def on_emoteList(self, *args):
@@ -292,6 +313,13 @@ class Client(BaseNamespace):
         pass
 
     def on_playlist(self, *args):
+        for arg in args:
+            for media in arg:
+                if 'media' in media:
+                    if media['media']['id'] not in self.media:
+                        self.media.append(media['media']['id'])
+        log.info('Playlist Loaded')
+        return
         data = {}
 
         if(args[0] and args[0][0]):
