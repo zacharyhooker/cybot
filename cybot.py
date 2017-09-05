@@ -127,9 +127,6 @@ class Client(BaseNamespace):
         self.sendmsg(data)
         return True
 
-    def queue(self, msg, *args):
-        self.queue(args, True)
-
     def chat_rate(self, msg, *args):
         """TODO: If the socket app does not support media, allow this to wait
         for a callback; this will let users rate functionality?
