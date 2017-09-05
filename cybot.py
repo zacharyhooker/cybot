@@ -99,6 +99,7 @@ class Client(BaseNamespace):
     def chat_trailers(self, msg, *args):
         search = tmdb.Search()
         vids = {}
+        msg.to = msg.username
         regex = re.compile('[^a-zA-Z ]')
         for movie in self.poll:
             movie = movie.replace('.', ' ')
@@ -116,18 +117,16 @@ class Client(BaseNamespace):
                         if t['type'] == 'Trailer':
                             vids[
                                 search.results[0]['title']] = t['key']
-                            break
-            msg.to = msg.username
-            for title, vid in vids.items():
-                msg.body = title + ': http://youtube.com/watch?v=' + vid
-                self.sendmsg(msg)
-                for user in self.userlist:
-                    if(user['name'].lower() == msg.username.lower() and user['rank'] > 1):
-                        if any(t['key'] in s for s in self.media):
-                            msg.body = title + ' already exists in queue.'
-                            self.sendmsg(msg)
-                        else:
-                            self.queue(vid, True)
+        for title, vid in vids.items():
+            msg.body = title + ': http://youtube.com/watch?v=' + vid
+            self.sendmsg(msg)
+            for user in self.userlist:
+                if(user['name'].lower() == msg.username.lower() and user['rank'] > 1):
+                    if any(t['key'] in s for s in self.media):
+                        msg.body = title + ' already exists in queue.'
+                        self.sendmsg(msg)
+                    else:
+                        self.queue(vid, True)
 
     def chat_debug(self, msg, *args):
         for x in self.media:
