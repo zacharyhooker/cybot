@@ -115,8 +115,9 @@ class Client(BaseNamespace):
                             break
             msg.to = msg.username
             for title, vid in vids.items():
-                msg.body = title + ': ' + vid
+                msg.body = title + ': http://youtube.com/watch?v=' + vid
                 self.sendmsg(msg)
+                self.queue(vid, True)
 
     def chat_fuck(self, msg, *args):
         fmsg = fuck.random(from_=msg.username)
@@ -125,6 +126,9 @@ class Client(BaseNamespace):
         data = Msg({'msg': fmsg.text})
         self.sendmsg(data)
         return True
+
+    def chat_queue(self, msg, *args):
+        self.queue(args, True)
 
     def chat_rate(self, msg, *args):
         """TODO: If the socket app does not support media, allow this to wait
@@ -166,6 +170,10 @@ class Client(BaseNamespace):
         else:
             self.emit('chatMsg', {'msg': msg.body, 'meta': msg.meta})
         log.debug(msg)
+
+    def queue(self, url, after=False):
+        data = {"id": url, "type": "yt", "pos": "next", "temp": True}
+        self.emit('queue', data)
 
     def sendadminmsg(self, msg):
         msg = {'username': None, 'rank': 0}
