@@ -9,6 +9,7 @@ from socketIO_client_nexus import BaseNamespace, SocketIO
 from urllib.parse import urlparse
 from datetime import datetime
 import sqlite3 as sql
+import re
 import sys
 import os
 
@@ -98,8 +99,12 @@ class Client(BaseNamespace):
     def chat_trailers(self, msg, *args):
         search = tmdb.Search()
         vids = {}
+        regex = re.compile('[^a-zA-Z ]')
         for movie in self.poll:
+            movie = movie.replace('.', ' ')
+            movie = regex.sub('', movie)
             response = search.movie(query=movie)
+            print(movie)
             if search.results:
                 mid = search.results[0]['id']
             else:
