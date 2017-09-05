@@ -133,6 +133,11 @@ class Client(BaseNamespace):
             msg.body = ''.join(x)
             self.sendmsg(msg)
 
+    def chat_choose(self, msg, *args):
+        if args[0]:
+            msg.body = random.choice(args[0])
+            self.sendmsg(msg)
+
     def chat_fuck(self, msg, *args):
         fmsg = fuck.random(from_=msg.username)
         if len(args) > 0:
