@@ -115,6 +115,8 @@ class Client(BaseNamespace):
                 if 'results' in videos:
                     for t in videos['results']:
                         if t['type'] == 'Trailer':
+                            if any(t['key'] in s for s in self.media):
+                                break
                             vids[
                                 search.results[0]['title']] = t['key']
                             break
@@ -122,7 +124,10 @@ class Client(BaseNamespace):
             for title, vid in vids.items():
                 msg.body = title + ': http://youtube.com/watch?v=' + vid
                 self.sendmsg(msg)
-                self.queue(vid, True)
+                for user in self.userlist:
+                    if(user['name'] == msg.username and user['rank'] > 1):
+                        self.queue(vid, True)
+                        break
 
     def chat_fuck(self, msg, *args):
         fmsg = fuck.random(from_=msg.username)
