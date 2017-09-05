@@ -8,6 +8,11 @@ import random
 from socketIO_client_nexus import BaseNamespace, SocketIO
 from urllib.parse import urlparse
 from datetime import datetime
+import sqlite3 as sql
+import sys
+import os
+
+import tmdbsimple as tmdb
 
 log.getLogger(__name__).addHandler(
     log.NullHandler())
@@ -35,6 +40,7 @@ class Client(BaseNamespace):
         self.response = {}
         self.route = {}
         self.userlist = []
+        self.poll = []
         self.media = []
         self.init = False
 
@@ -46,6 +52,8 @@ class Client(BaseNamespace):
         if all(k in config for k in ('channel', 'username', 'password')):
             self.login(config['channel'], config['username'],
                        config['password'])
+        if 'tmdbapi' in config:
+            tmdb.API_KEY = config['tmdbapi']
 
     def login(self, channel, username, password):
         """Simple login to the websocket. Emits the params to the
@@ -87,6 +95,29 @@ class Client(BaseNamespace):
 
         self.sendmsg(Msg(data))
 
+    def chat_trailers(self, msg, *args):
+        search = tmdb.Search()
+        vids = {}
+        for movie in self.poll:
+            response = search.movie(query=movie)
+            if search.results:
+                mid = search.results[0]['id']
+            else:
+                break
+            movie = tmdb.Movies(mid)
+            videos = movie.videos()
+            for video in videos:
+                if 'results' in videos:
+                    for t in videos['results']:
+                        if t['type'] == 'Trailer':
+                            vids[
+                                search.results[0]['title']] = 'http://youtube.com/watch?v=' + t['key']
+                            break
+            msg.to = msg.username
+            for title, vid in vids.items():
+                msg.body = title + ': ' + vid
+                self.sendmsg(msg)
+
     def chat_fuck(self, msg, *args):
         fmsg = fuck.random(from_=msg.username)
         if len(args) > 0:
@@ -125,7 +156,7 @@ class Client(BaseNamespace):
 
     def chat_auto(self, msg, *args):
         if(msg.username == 'catboy'):
-            if random.random() < 0.20:
+            if random.random() < 0.02:
                 data = {'body': 'meow'}
                 self.sendmsg(Msg(data))
 
@@ -135,6 +166,15 @@ class Client(BaseNamespace):
         else:
             self.emit('chatMsg', {'msg': msg.body, 'meta': msg.meta})
         log.debug(msg)
+
+    def sendadminmsg(self, msg):
+        msg = {'username': None, 'rank': 0}
+        print(self.userlist)
+        for y in self.userlist:
+            if(not y['meta']['afk']):
+                if(msg['rank'] < y['rank']):
+                    msg['username'] = y['name']
+                    msg['rank'] = y['rank']
 
     def handout(self):
         t = threading.Timer(60 * 61, self.handout)
@@ -156,7 +196,7 @@ class Client(BaseNamespace):
                             dir_cmd = func
                             args = match
                             cnt = True
-        if(msg.text.startswith('!')):
+        if(msg.text.startswith('!') and msg.username):
             cmd = msg.text.split()
             dir_cmd = cmd[0][1:]
             args = cmd[1:]
@@ -169,11 +209,14 @@ class Client(BaseNamespace):
                 func = getattr(self, call.lower())
                 if callable(func):
                     log.info('%s : %s' % (func.__name__, msg))
-                    ret = func(msg, *args)
+                    ret = func(msg, args)
             except Exception as e:
                 log.error('Exception[%s]: %s' % (e, msg))
 #               data = {'body': '(%s) failed to run.' % (cmd),
 #                       'to': msg.username}
+                exc_type, exc_obj, exc_tb = sys.exc_info()
+                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+                print(exc_type, fname, exc_tb.tb_lineno)
         return ret
 #           self.sendmsg(Msg(data))
 
@@ -188,6 +231,13 @@ class Client(BaseNamespace):
             self.media.append(vid)
             log.info(vid)
         pass
+
+    def on_newPoll(self, *args):
+        self.poll = []
+        for poll in args:
+            if 'options' in poll:
+                for opt in poll['options']:
+                    self.poll.append(opt)
 
     def on_userlist(self, *args):
         self.userlist = args[0]

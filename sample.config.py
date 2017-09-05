@@ -4,15 +4,19 @@ config = {
     'username': 'username',
     'password': 'password',
     'channel': 'channel',
+    'tmdbapi': 'APIKEY',
     'route': {
         'imdbot':
         {
             'perds': '\[([^\s]+) [0-9]+ :perdgive: #!# ([0-9]*)',
             'jumble': 'word: (.*)\]'
+        },
+        'catboy': {
+            'auto': '(.*)'
         }
     },
     'response': {
-        'catboy': 'Meow, meow. Meow. <3 {}',
+        'zim': 'Meow, meow. Meow. <3 {}',
         'bdizzle': 'Please no.',
         'generic':
         [
@@ -22,7 +26,6 @@ config = {
         ]
     }
 }
-
 
 if __name__ == '__main__':
     cytube(config)
