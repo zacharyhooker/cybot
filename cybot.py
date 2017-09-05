@@ -111,7 +111,7 @@ class Client(BaseNamespace):
                     for t in videos['results']:
                         if t['type'] == 'Trailer':
                             vids[
-                                search.results[0]['title']] = 'http://youtube.com/watch?v=' + t['key']
+                                search.results[0]['title']] = t['key']
                             break
             msg.to = msg.username
             for title, vid in vids.items():
