@@ -20,6 +20,26 @@ log.getLogger(__name__).addHandler(
     log.NullHandler())
 log.basicConfig(level=log.INFO)
 
+def check_init(func):
+    """If the init var is not set we need to wait to call the function
+    until the client has fully initialized | Decorator"""
+
+    def wrapper(self, *args, **kwargs):
+        if not self.init:
+            pass
+        else:
+            return func(self, *args, **kwargs)
+    return wrapper
+
+def cytube(config):
+    url = 'http://%s/socketconfig/%s.json' % ('cytu.be', config['channel'])
+    server_list = req.get(url).json()['servers']
+    server = [i['url'] for i in server_list if i['secure'] is False][0]
+    url = urlparse(server)
+    sio = SocketIO(url.hostname, url.port, Client)
+    instance = sio.get_namespace()
+    instance.config(config)
+    sio.wait()
 
 class Client(BaseNamespace):
 
@@ -320,23 +340,3 @@ class Client(BaseNamespace):
         pass
 
 
-def check_init(func):
-    """If the init var is not set we need to wait to call the function
-    until the client has fully initialized | Decorator"""
-
-    def wrapper(self, *args, **kwargs):
-        if not self.init:
-            pass
-        else:
-            return func(self, *args, **kwargs)
-    return wrapper
-
-def cytube(config):
-    url = 'http://%s/socketconfig/%s.json' % ('cytu.be', config['channel'])
-    server_list = req.get(url).json()['servers']
-    server = [i['url'] for i in server_list if i['secure'] is False][0]
-    url = urlparse(server)
-    sio = SocketIO(url.hostname, url.port, Client)
-    instance = sio.get_namespace()
-    instance.config(config)
-    sio.wait()
