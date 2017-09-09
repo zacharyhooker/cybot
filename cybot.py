@@ -20,6 +20,7 @@ log.getLogger(__name__).addHandler(
     log.NullHandler())
 log.basicConfig(level=log.INFO)
 
+
 def check_init(func):
     """If the init var is not set we need to wait to call the function
     until the client has fully initialized | Decorator"""
@@ -31,6 +32,7 @@ def check_init(func):
             return func(self, *args, **kwargs)
     return wrapper
 
+
 def cytube(config):
     url = 'http://%s/socketconfig/%s.json' % ('cytu.be', config['channel'])
     server_list = req.get(url).json()['servers']
@@ -40,6 +42,7 @@ def cytube(config):
     instance = sio.get_namespace()
     instance.config(config)
     sio.wait()
+
 
 class Client(BaseNamespace):
 
@@ -105,13 +108,16 @@ class Client(BaseNamespace):
 
     def chat_love(self, msg, *args):
         data = {'msg': 'No love.'}
+        if args[0]:
+            args = args[0]
+        to = args[0] if len(args) > 0 else self.username
+        frm = args[1] if len(args) > 1 else msg.username
         if(msg.username in self.response):
-            to = args[0] if args else self.username
             data['msg'] = self.response[
-                msg.username].format(to, msg.username)
+                msg.username].format(to, frm)
         else:
             data['msg'] = random.choice(
-                self.response['generic']).format(args[0], msg.username)
+                self.response['generic']).format(to, frm)
 
         self.sendmsg(Msg(data))
 
@@ -275,10 +281,12 @@ class Client(BaseNamespace):
 
     def on_newPoll(self, *args):
         self.poll = []
+        print(args)
         for poll in args:
             if 'options' in poll:
                 for opt in poll['options']:
                     self.poll.append(opt)
+        print(self.poll)
 
     def on_userlist(self, *args):
         self.userlist = args[0]
@@ -338,5 +346,3 @@ class Client(BaseNamespace):
 
     def on_mediaUpdate(self, *args):
         pass
-
-
