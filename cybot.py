@@ -12,6 +12,7 @@ import sqlite3 as sql
 import re
 import sys
 import os
+import giphypop
 
 import tmdbsimple as tmdb
 
@@ -55,6 +56,8 @@ class Client(BaseNamespace):
                        config['password'])
         if 'tmdbapi' in config:
             tmdb.API_KEY = config['tmdbapi']
+        if 'giphyapi' in config:
+            self.giphy = giphypop.Giphy(api_key=config['giphyapi'])
 
     def login(self, channel, username, password):
         """Simple login to the websocket. Emits the params to the
@@ -83,6 +86,14 @@ class Client(BaseNamespace):
     def pm_kill(self, msg, *args):
         if(msg.username == 'zim'):
             exit()
+
+    def chat_giphy(self, msg, *args):
+        if(args[0]):
+            x = self.giphy.search(' '.join(args[0]))
+            for y in x:
+                msg.body = y.media_url + '.pic'
+                self.sendmsg(msg)
+                return
 
     def chat_love(self, msg, *args):
         data = {'msg': 'No love.'}

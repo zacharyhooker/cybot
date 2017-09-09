@@ -4,7 +4,8 @@ config = {
     'username': 'username',
     'password': 'password',
     'channel': 'channel',
-    'tmdbapi': 'APIKEY',
+    'tmdbapi': 'KEY',
+    'giphyapi': 'KEY',
     'route': {
         'imdbot':
         {
