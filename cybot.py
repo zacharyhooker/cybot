@@ -21,18 +21,6 @@ log.getLogger(__name__).addHandler(
 log.basicConfig(level=log.INFO)
 
 
-def check_init(func):
-    """If the init var is not set we need to wait to call the function
-    until the client has fully initialized | Decorator"""
-
-    def wrapper(self, *args, **kwargs):
-        if not self.init:
-            pass
-        else:
-            return func(self, *args, **kwargs)
-    return wrapper
-
-
 class Client(BaseNamespace):
 
     def initialize(self):
@@ -139,10 +127,12 @@ class Client(BaseNamespace):
                     else:
                         self.queue(vid, True)
 
-    def chat_debug(self, msg, *args):
-        for x in self.media:
-            msg.body = ''.join(x)
-            self.sendmsg(msg)
+    def pm_debug(self, msg, *args):
+        if msg.username == 'zim':
+            msg.to = 'zim'
+            for x in self.media:
+                msg.body = ''.join(x)
+                self.sendmsg(msg)
 
     def chat_choose(self, msg, *args):
         if args[0]:
@@ -248,13 +238,10 @@ class Client(BaseNamespace):
                     ret = func(msg, args)
             except Exception as e:
                 log.error('Exception[%s]: %s' % (e, msg))
-#               data = {'body': '(%s) failed to run.' % (cmd),
-#                       'to': msg.username}
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
                 print(exc_type, fname, exc_tb.tb_lineno)
         return ret
-#           self.sendmsg(Msg(data))
 
     def on_chatMsg(self, omsg):
         msg = Msg(omsg)
@@ -265,12 +252,6 @@ class Client(BaseNamespace):
             self.media.remove(args[0]['id'])
         except Exception as e:
             return
-        for vid in args:
-            if 'meta' in vid and 'gdrive_subtitles' in vid['meta']:
-                vid['directlink'] = 'https://drive.google.com/file/d/' + vid['id']
-            # self.media.append(vid)
-            log.info(vid)
-        pass
 
     def on_newPoll(self, *args):
         self.poll = []
@@ -289,7 +270,6 @@ class Client(BaseNamespace):
                 if 'media' in media:
                     if media['media']['id'] not in self.media:
                         self.media.append(media['media']['id'])
-        # self.media.append(args)
 
     def on_pm(self, omsg):
         msg = Msg(omsg)
@@ -304,7 +284,6 @@ class Client(BaseNamespace):
 
     def on_connect(self):
         log.info('[Connected]')
-        # self.handout()
 
     def on_login(self, *args):
         if(not args[0]['success']):
@@ -312,7 +291,6 @@ class Client(BaseNamespace):
             raise SystemExit
 
     def on_event(self, *args):
-        print(args)
         pass
 
     def on_emoteList(self, *args):
@@ -334,17 +312,6 @@ class Client(BaseNamespace):
                     if media['media']['id'] not in self.media:
                         self.media.append(media['media']['id'])
         log.info('Playlist Loaded')
-        return
-        data = {}
-
-        if(args[0] and args[0][0]):
-            media = args[0][0]['media']
-            data[media['id']] = media
-            if('directlink' in data[media['id']]):
-                data[media['id']][
-                    'directlink'] = 'https://drive.google.com/file/d/' + media['id']
-            data[media['id']]['datetime'] = datetime.now()
-            self.media.append(data)
 
     def on_channelOpts(self, *args):
         pass
@@ -352,6 +319,17 @@ class Client(BaseNamespace):
     def on_mediaUpdate(self, *args):
         pass
 
+
+def check_init(func):
+    """If the init var is not set we need to wait to call the function
+    until the client has fully initialized | Decorator"""
+
+    def wrapper(self, *args, **kwargs):
+        if not self.init:
+            pass
+        else:
+            return func(self, *args, **kwargs)
+    return wrapper
 
 def cytube(config):
     url = 'http://%s/socketconfig/%s.json' % ('cytu.be', config['channel'])
