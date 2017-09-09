@@ -100,7 +100,7 @@ class Client(BaseNamespace):
 
     def chat_giphy(self, msg, *args):
         if(args[0]):
-            x = self.giphy.search(' '.join(args[0]))
+            x = self.giphy.search(' '.join(args[0]), rating='pg-13')
             for y in x:
                 msg.body = y.media_url + '.pic'
                 self.sendmsg(msg)
