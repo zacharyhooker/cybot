@@ -20,6 +20,10 @@ log.getLogger(__name__).addHandler(
     log.NullHandler())
 log.basicConfig(level=log.INFO)
 
+chatlog = log.getLogger('chat')
+chatlog.addHandler(log.FileHandler('chat.log'))
+chatlog.setLevel(log.INFO)
+
 
 def check_init(func):
     """If the init var is not set we need to wait to call the function
@@ -147,10 +151,12 @@ class Client(BaseNamespace):
             self.sendmsg(msg)
             for user in self.userlist:
                 if(user['name'].lower() == msg.username.lower() and user['rank'] > 1):
+                    print('user authed')
                     if any(t['key'] in s for s in self.media):
                         msg.body = title + ' already exists in queue.'
                         self.sendmsg(msg)
                     else:
+                        print('queue')
                         self.queue(vid, True)
 
     def pm_debug(self, msg, *args):
@@ -177,10 +183,10 @@ class Client(BaseNamespace):
         """TODO: If the socket app does not support media, allow this to wait
         for a callback; this will let users rate functionality?
         (SCOPE CREEP)"""
-        if(args[0]):
-            print('rated %s, %s, %s %s' %
-                  (self.media['id'], self.media['title'],
-                   self.media['type'], args[0]))
+        if(len(args)>0):
+            msg.to = msg.username
+            msg.body = 'Thank you for rating, wzrd will be pleased!'
+            self.sendmsg(msg)
 
     def chat_jumble(self, msg, *args):
         """Attempts to solve an anagram based on letters parsed from handle_msg
@@ -236,6 +242,7 @@ class Client(BaseNamespace):
 
     @check_init
     def handle_msg(self, msg):
+        chatlog.info(msg)
         ret = False
         cmd = ''
         cnt = False
