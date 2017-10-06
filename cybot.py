@@ -3,6 +3,7 @@ import logging as log
 import requests as req
 from msg import Msg
 from wallet import Wallet
+import math
 import threading
 from foaas import fuck
 import random
@@ -215,15 +216,15 @@ class Client(BaseNamespace):
         if(datetime.now() - last > td):
             wallet.handout(amt)
         else:
-            timetil = datetime.now() - (wallet.lasthandout + td)
-            omsg = {'body': 'Try again in {}s'.format(
-                (timetil / timedelta(minutes=1)))}
+            timetil = math.ceil(
+                ((last + td) - datetime.now()).total_seconds() / 60)
+            omsg = {'body': 'Try again in {} minute(s).'.format(timetil)}
             self.sendmsg(Msg(omsg))
             return
         balance = wallet.balance
         if(balance):
             omsg = {
-                'body': 'Here''s {} squids. {} has {} squids'.format(amt, msg.username, balance)}
+                'body': 'Here''s {} squids. {} has {} squids!'.format(amt, msg.username, balance)}
             self.sendmsg(Msg(omsg))
         return
 
