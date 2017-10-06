@@ -54,11 +54,3 @@ class Wallet(SQLite):
         qry = 'UPDATE {0} SET {1} WHERE {2}'.format(
             self.table, dqry, self.conditions)
         self.query(qry)
-
-#y = Wallet('strudles')
-k = Wallet('sodiun')
-
-
-x = Wallet('xavs')
-print(x.balance)
-print(x.lasthandout)
