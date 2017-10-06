@@ -11,7 +11,7 @@ class Wallet(SQLite):
         self.connect('currency.db')
         if not self.usercheck():
             data = {'username': username, 'amount': 0,
-                    'lasthandout': 'datetime("now", "localtime")'}
+                    'lasthandout': '#!datetime("now", "localtime")'}
             self.write(self.table, data)
 
     def usercheck(self):
@@ -31,7 +31,7 @@ class Wallet(SQLite):
 
     def handout(self, amount):
         data = {
-            'lasthandout': 'datetime("now", "localtime")', 'amount': amount}
+            'lasthandout': '#!datetime("now", "localtime")', 'amount': amount}
         self.update(data)
 
     def get(self, columns, single=False, limit=None):
@@ -55,4 +55,10 @@ class Wallet(SQLite):
             self.table, dqry, self.conditions)
         self.query(qry)
 
-y = Wallet('strudles')
+#y = Wallet('strudles')
+k = Wallet('sodiun')
+
+
+x = Wallet('xavs')
+print(x.balance)
+print(x.lasthandout)

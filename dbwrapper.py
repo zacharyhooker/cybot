@@ -32,8 +32,12 @@ class SQLite:
         columns = []
         values = []
         for k, v in data.items():
-            columns.append('"' + str(k) + '"')
-            values.append('"' + str(v) + '"')
+            v = str(v)
+            columns.append(k)
+            if(v.startswith('#!')):
+                values.append(v[2:])
+            else:
+                values.append('"' + v + '"')
         qry = 'INSERT INTO {0} ({1}) VALUES ({2});'.format(
             table, ', '.join(columns), ', '.join(values))
         return self.query(qry)
