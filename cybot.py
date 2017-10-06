@@ -2,15 +2,14 @@
 import logging as log
 import requests as req
 from msg import Msg
+from wallet import Wallet
 import threading
 from foaas import fuck
 import random
 from socketIO_client_nexus import BaseNamespace, SocketIO
 from urllib.parse import urlparse
 from datetime import datetime, timedelta
-import sqlite3 as sql
 import re
-import time
 import sys
 import os
 import giphypop
@@ -61,13 +60,6 @@ class Client(BaseNamespace):
         self.poll = []
         self.media = []
         self.init = False
-        self.dbinit()
-
-    def dbinit(self):
-        self.currencyConn = sql.connect('currency.db')
-        self.currencyCur = self.currencyConn.cursor()
-        self.currencyCur.execute(
-            '''CREATE TABLE IF NOT EXISTS wallet (username text UNIQUE, amount real, lasthandout timestamp)''')
 
     def config(self, config):
         if 'response' in config:
@@ -194,7 +186,7 @@ class Client(BaseNamespace):
         """TODO: If the socket app does not support media, allow this to wait
         for a callback; this will let users rate functionality?
         (SCOPE CREEP)"""
-        if(len(args)>0):
+        if(len(args) > 0):
             msg.to = msg.username
             msg.body = 'Thank you for rating, wzrd will be pleased!'
             self.sendmsg(msg)
@@ -216,33 +208,22 @@ class Client(BaseNamespace):
 
     def chat_handout(self, msg, *args):
         amt = random.randint(1, 100)
-        wallet = self.qryCur(
-            'SELECT amount, lasthandout FROM wallet WHERE username = "{}"'.format(msg.username))
-        if wallet:
-            print('has wallet....', wallet[0], amt, msg.username)
-            print('last handout', datetime.strptime(
-                wallet[1], '%Y-%m-%d %H:%M:%S'), '===>', datetime.now())
-            if(datetime.now() - datetime.strptime(wallet[1], '%Y-%m-%d %H:%M:%S') > timedelta(seconds=self.timeout['handout'])):
-                self.qryCur('UPDATE wallet SET amount = {}, lasthandout = datetime("now", "localtime") WHERE username = "{}"'.format(
-                    wallet[0] + amt, msg.username))
-            else:
-                timetil = datetime.now() - (datetime.strptime(
-                    wallet[1], '%Y-%m-%d %H:%M:%S') + timedelta(seconds=self.timeout['handout']))
-                omsg = {'body': 'Try again in {}s'.format(
-                    (timetil / timedelta(minutes=1)))}
-
-                omsg = {'body': 'Please wait {}s'.format(timedelta(seconds=self.timeout['handout']) - (datetime.now() - datetime.strptime(
-                    wallet[1], '%Y-%m-%d %H:%M:%S')))}
-                self.sendmsg(Msg(omsg))
-                return
+        wallet = Wallet(msg.username)
+        last = datetime.strptime(wallet.lasthandout, '%Y-%m-%d %H:%M:%S')
+        td = timedelta(seconds=self.timeout['handout'])
+        print('has wallet....', wallet, amt, msg.username)
+        if(datetime.now() - last > td):
+            wallet.handout(amt)
         else:
-            self.qryCur('INSERT INTO wallet (username, amount, lasthandout) VALUES ("{}", {}, datetime("now", "localtime"))'.format(
-                msg.username, amt))
-        crnt = self.qryCur(
-            'SELECT amount FROM wallet WHERE username = "{}"'.format(msg.username))
-        if(crnt):
+            timetil = datetime.now() - (wallet.lasthandout + td)
+            omsg = {'body': 'Try again in {}s'.format(
+                (timetil / timedelta(minutes=1)))}
+            self.sendmsg(Msg(omsg))
+            return
+        balance = wallet.balance
+        if(balance):
             omsg = {
-                'body': 'Here''s {} squids. {} has {} squids'.format(amt, msg.username, crnt[0])}
+                'body': 'Here''s {} squids. {} has {} squids'.format(amt, msg.username, balance)}
             self.sendmsg(Msg(omsg))
         return
 
