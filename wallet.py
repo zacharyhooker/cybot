@@ -10,7 +10,8 @@ class Wallet(SQLite):
         self.conditions = 'username = "{0}"'.format(username)
         self.connect('currency.db')
         if not self.usercheck():
-            data = {'username': username, 'amount': 0, 'lasthandout': 0}
+            data = {'username': username, 'amount': 0,
+                    'lasthandout': 'datetime("now", "localtime")'}
             self.write(self.table, data)
 
     def usercheck(self):
@@ -53,3 +54,5 @@ class Wallet(SQLite):
         qry = 'UPDATE {0} SET {1} WHERE {2}'.format(
             self.table, dqry, self.conditions)
         self.query(qry)
+
+y = Wallet('strudles')
