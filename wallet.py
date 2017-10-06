@@ -30,9 +30,9 @@ class Wallet(SQLite):
         self.update(data)
 
     def handout(self, amount):
-        data = {
-            'lasthandout': '#!datetime("now", "localtime")', 'amount': amount}
-        self.update(data)
+        self.transaction(amount)
+        self.update({
+            'lasthandout': 'datetime("now", "localtime")'})
 
     def get(self, columns, single=False, limit=None):
         qry = 'SELECT {0} FROM {1} WHERE {2};'.format(
@@ -54,3 +54,13 @@ class Wallet(SQLite):
         qry = 'UPDATE {0} SET {1} WHERE {2}'.format(
             self.table, dqry, self.conditions)
         self.query(qry)
+
+
+x = Wallet('x')
+print(x.balance)
+x.handout(55)
+print(x.balance)
+x.transaction(4)
+print(x.balance)
+x.transaction(-500)
+print(x.balance)
