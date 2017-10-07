@@ -111,9 +111,11 @@ class Client(BaseNamespace):
         if(args[0]):
             x = self.giphy.search(' '.join(args[0]), rating='pg-13')
             for y in x:
-                msg.body = y.media_url + '.pic'
-                self.sendmsg(msg)
+                out = y.media_url + '.pic'
+                self.sendmsg(out)
                 return
+            out = 'There were no PG-13 results for that request.'
+            self.sendmsg(out)
 
     def chat_love(self, msg, *args):
         data = {'msg': 'No love.'}
@@ -217,21 +219,27 @@ class Client(BaseNamespace):
 
     def chat_handout(self, msg, *args):
         amt = random.randint(1, 100)
+        print(1)
         wallet = Wallet(msg.username)
+        print(1)
         last = datetime.strptime(wallet.lasthandout, '%Y-%m-%d %H:%M:%S')
+        print(1)
         td = timedelta(seconds=self.timeout['handout'])
+        print(1)
         if(datetime.now() - last > td):
             wallet.handout(amt)
         else:
             timetil = math.ceil(
                 ((last + td) - datetime.now()).total_seconds() / 60)
             self.sendmsg(
-                Msg('Try again in {} minute(s).'.format(timetil)))
+                'Try again in {} minute(s).'.format(timetil))
             return
         balance = wallet.balance
+        print(1)
         if(balance):
             self.sendmsg('Here''s {} squids. {} has {} squids!'.format(
                 amt, msg.username, balance))
+            print(1)
         return
 
     def qryCur(self, qry):
