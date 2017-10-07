@@ -6,6 +6,12 @@ config = {
     'channel': 'channel',
     'tmdbapi': 'KEY',
     'giphyapi': 'KEY',
+    'timeout': {
+        'handout': 5,
+    },
+    'cost': {
+        'giphy': 500,
+    },
     'route': {
         'imdbot':
         {

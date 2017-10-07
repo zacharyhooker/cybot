@@ -76,6 +76,8 @@ class Client(BaseNamespace):
             self.giphy = giphypop.Giphy(api_key=config['giphyapi'])
         if 'timeout' in config:
             self.timeout = config['timeout']
+        if 'cost' in config:
+            self.cost = config['cost']
 
     def login(self, channel, username, password):
         """Simple login to the websocket. Emits the params to the
@@ -128,6 +130,11 @@ class Client(BaseNamespace):
 
         self.sendmsg(Msg(data))
 
+    def chat_squids(self, msg, *args):
+        wallet = Wallet(msg.username)
+        self.sendmsg(Msg({'body': '{0} has {1} squids.'.format(
+            msg.username, wallet.balance)}))
+
     def chat_trailers(self, msg, *args):
         print(msg)
         search = tmdb.Search()
@@ -176,6 +183,7 @@ class Client(BaseNamespace):
             self.sendmsg(msg)
 
     def chat_fuck(self, msg, *args):
+        args = args[0]
         fmsg = fuck.random(from_=msg.username)
         if len(args) > 0:
             fmsg = fuck.random(from_=msg.username, name=args[0])
@@ -212,20 +220,18 @@ class Client(BaseNamespace):
         wallet = Wallet(msg.username)
         last = datetime.strptime(wallet.lasthandout, '%Y-%m-%d %H:%M:%S')
         td = timedelta(seconds=self.timeout['handout'])
-        print('has wallet....', wallet, amt, msg.username)
         if(datetime.now() - last > td):
             wallet.handout(amt)
         else:
             timetil = math.ceil(
                 ((last + td) - datetime.now()).total_seconds() / 60)
-            omsg = {'body': 'Try again in {} minute(s).'.format(timetil)}
-            self.sendmsg(Msg(omsg))
+            self.sendmsg(
+                Msg('Try again in {} minute(s).'.format(timetil)))
             return
         balance = wallet.balance
         if(balance):
-            omsg = {
-                'body': 'Here''s {} squids. {} has {} squids!'.format(amt, msg.username, balance)}
-            self.sendmsg(Msg(omsg))
+            self.sendmsg('Here''s {} squids. {} has {} squids!'.format(
+                amt, msg.username, balance))
         return
 
     def qryCur(self, qry):
@@ -235,17 +241,17 @@ class Client(BaseNamespace):
         return res
 
     def chat_catboy(self, msg, *args):
-        data = {'body': ':catfap:'}
-        self.sendmsg(Msg(data))
+        self.sendmsg(':catfap:')
 
     def chat_auto(self, msg, *args):
         if(msg.username == 'catboy'):
             if random.random() < 0.02:
-                data = {'body': 'meow'}
-                self.sendmsg(Msg(data))
+                self.sendmsg('Meow')
 
     def sendmsg(self, msg):
-        if(msg.to):
+        if(isinstance(msg, str)):
+            self.emit('chatMsg', {'msg': msg})
+        elif(msg.to):
             self.emit('pm', {'msg': msg.body, 'meta': {}, 'to': msg.to})
         else:
             self.emit('chatMsg', {'msg': msg.body, 'meta': msg.meta})
@@ -269,7 +275,7 @@ class Client(BaseNamespace):
         t = threading.Timer(60 * 61, self.handout)
         t.daemon = True
         t.start()
-        self.sendmsg(Msg({'body': '$handout'}))
+        self.sendmsg('$handout')
 
     @check_init
     def handle_msg(self, msg):
@@ -298,6 +304,17 @@ class Client(BaseNamespace):
             try:
                 func = getattr(self, call.lower())
                 if callable(func):
+                    if(dir_cmd in self.cost):
+                        wallet = Wallet(msg.username)
+                        if(wallet.balance < self.cost[dir_cmd]):
+                            self.sendmsg('{0} costs {1} squids. {2} has {3}'.format(
+                                dir_cmd, self.cost[dir_cmd], msg.username, wallet.balance))
+                            return
+                        else:
+                            wallet.transaction(-self.cost[dir_cmd])
+                            self.sendmsg(
+                                Msg({'to': msg.username, 'body': 'You spent {0} squids on {1}'.format(self.cost[dir_cmd], dir_cmd)}))
+
                     log.info('%s : %s' % (func.__name__, msg))
                     ret = func(msg, args)
             except Exception as e:
