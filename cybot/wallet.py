@@ -1,18 +1,26 @@
-from dbwrapper import SQLite
+from .dbwrapper import SQLite
 from datetime import datetime, timedelta
 
 
 class Wallet(SQLite):
 
     def __init__(self, username):
+        self.creation = False
         self.table = 'wallet'
         self.username = username
         self.conditions = 'username = "{0}"'.format(username)
-        self.connect('currency.db')
+        self.connect('db/currency.db')
+        self.maketables()
         if not self.usercheck():
             data = {'username': username, 'amount': 0,
                     'lasthandout': '#!datetime("now", "localtime")'}
             self.write(self.table, data)
+            self.creation = True
+
+    def maketables(self):
+        qry = '''CREATE TABLE IF NOT EXISTS wallet (username text UNIQUE, amount real, lasthandout timestamp)'''
+        self.query(qry)
+
 
     def usercheck(self):
         return self.get('*')

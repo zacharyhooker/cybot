@@ -1,14 +1,13 @@
 # encoding: utf-8
 import logging as log
 import requests as req
-from msg import Msg
-from wallet import Wallet
+from .msg import Msg
+from .wallet import Wallet
 import math
 import threading
 from foaas import fuck
 import random
-from socketIO_client_nexus import BaseNamespace, SocketIO
-from urllib.parse import urlparse
+from socketIO_client_nexus import BaseNamespace
 from datetime import datetime, timedelta
 import re
 import sys
@@ -22,7 +21,7 @@ log.getLogger(__name__).addHandler(
 log.basicConfig(level=log.INFO)
 
 chatlog = log.getLogger('chat')
-chatlog.addHandler(log.FileHandler('chat.log'))
+chatlog.addHandler(log.FileHandler('log/chat.log'))
 chatlog.setLevel(log.INFO)
 
 
@@ -36,18 +35,6 @@ def check_init(func):
         else:
             return func(self, *args, **kwargs)
     return wrapper
-
-
-def cytube(config):
-    url = 'http://%s/socketconfig/%s.json' % ('cytu.be', config['channel'])
-    server_list = req.get(url).json()['servers']
-    server = [i['url'] for i in server_list if i['secure'] is False][0]
-    url = urlparse(server)
-    sio = SocketIO(url.hostname, url.port, Client)
-    instance = sio.get_namespace()
-    instance.config(config)
-    sio.wait()
-
 
 class Client(BaseNamespace):
 
@@ -219,13 +206,12 @@ class Client(BaseNamespace):
 
     def chat_handout(self, msg, *args):
         amt = random.randint(1, 100)
-        print(1)
         wallet = Wallet(msg.username)
-        print(1)
         last = datetime.strptime(wallet.lasthandout, '%Y-%m-%d %H:%M:%S')
-        print(1)
         td = timedelta(seconds=self.timeout['handout'])
-        print(1)
+        print(wallet.creation)
+        if(wallet.creation):
+            td = timedelta(0)
         if(datetime.now() - last > td):
             wallet.handout(amt)
         else:
@@ -235,11 +221,9 @@ class Client(BaseNamespace):
                 'Try again in {} minute(s).'.format(timetil))
             return
         balance = wallet.balance
-        print(1)
         if(balance):
             self.sendmsg('Here''s {} squids. {} has {} squids!'.format(
                 amt, msg.username, balance))
-            print(1)
         return
 
     def qryCur(self, qry):
