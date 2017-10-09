@@ -14,8 +14,8 @@ Another socketio bot. Currently framed for cytu.be. Running on Python36 and Sock
 #### Message Prefixes
 The handlemsg function allows for dynamic function calls so there's no need to define anything other than the function.
 
-* chat_<function_name> will allow for that message to be called from the global/open chat. (ex: chat_choose)
-* pm_<function_name> functions will only continue code execution if the command was PM'd. (ex: pm_debug)
+* chat_<_function_name_> will allow for that message to be called from the global/open chat. (ex: chat_choose)
+* pm_<_function_name_> functions will only continue code execution if the command was PM'd. (ex: pm_debug)
 
 
 #### Cost & Wallet
@@ -24,7 +24,7 @@ A wallet-like functionality to allow for points or currency. The user wallet is 
 * You can also access the wallet directly in the function if you want to manipulate currency for a particular chat function call.
 
 #### Trailers
-This, like most of the functions, is http://cytu.be specific. It takes a list of currently polling film and movies and attempts to find the trailers and then add them to the next-in-queue.
+This, like most of the functions, is https://cytu.be/ specific. It takes a list of currently polling film and movies and attempts to find the trailers and then add them to the next-in-queue.
 
 * Currently searching themoviedb (api setup in config), will expand to search Youtube.
 
