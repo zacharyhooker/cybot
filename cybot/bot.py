@@ -115,7 +115,7 @@ class Client(BaseNamespace):
                 self.sendmsg('Please place a numeric bet.')
                 return
             cost = abs(int(args[0][0]))
-            if wallet.balance > cost:
+            if wallet.balance >= cost:
                 wallet.transaction(-cost)
                 serverWallet = Wallet('{{server}}')
                 x = int(random.triangular(0, 6, 2))
@@ -130,7 +130,7 @@ class Client(BaseNamespace):
                     self.sendmsg(
                         '{} hit the jackpot! They have earned {} squids!'.format(msg.username, cost))
                 elif (x == y == z) and max(x, y, z) < 4:
-                    wallet.transaction(cost * cost * cost)
+                    wallet.transaction(cost * 3)
                     self.sendmsg('{} matches 3 (three) fruits! [3x] Multiplyer (Bal: {})'.format(
                         msg.username, wallet.balance))
                 elif 5 in (x, y, z) and len({x, y, z}) == 3:
