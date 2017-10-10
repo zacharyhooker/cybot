@@ -139,7 +139,7 @@ class Client(BaseNamespace):
                         prizemsg += '{} hit the jackpot! They have earned {} squids!'.format(
                             msg.username, cost)
                     elif (x == y == z) and max(x, y, z) < 4:
-                        wallet.transaction(cost * cost * cost)
+                        wallet.transaction(cost * 3)
                         prizemsg += '{} matches 3 (three) fruits! [3x] Multiplyer (Bal: {})'.format(
                             msg.username, wallet.balance)
                     elif 5 in (x, y, z) and len({x, y, z}) == 3:
