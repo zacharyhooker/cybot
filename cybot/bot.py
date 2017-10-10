@@ -115,6 +115,7 @@ class Client(BaseNamespace):
             else:
                 self.sendmsg('Please place a numeric bet.')
                 return
+
             chk = timer.check(self.timeout['slots'])
             if(not chk['ready']):
                 timetil = int(chk['timetil'] / 60)
