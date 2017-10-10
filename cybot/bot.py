@@ -36,6 +36,7 @@ def check_init(func):
             return func(self, *args, **kwargs)
     return wrapper
 
+
 class Client(BaseNamespace):
 
     def initialize(self):
@@ -103,6 +104,47 @@ class Client(BaseNamespace):
                 return
             out = 'There were no PG-13 results for that request.'
             self.sendmsg(out)
+
+    def chat_slots(self, msg, *args):
+        if(args[0]):
+            wallet = Wallet(msg.username)
+            cost = 0
+            if args[0][0].isdigit():
+                cost = -abs(int(args[0][0]))
+            else:
+                self.sendmsg('Please place a numeric bet.')
+                return
+            cost = abs(int(args[0][0]))
+            if wallet.balance > cost:
+                wallet.transaction(-cost)
+                serverWallet = Wallet('{{server}}')
+                x = int(random.triangular(0, 6, 2))
+                z = int(random.triangular(0, 6, 2))
+                y = int(random.triangular(0, 6, 2))
+                translate = ['🍇', '🍈', '🍋', '🂻', '♦']
+                self.sendmsg('| {} | {} | {} |'.format(
+                    translate[x], translate[y], translate[z]))
+                if 5 in (x, y, z) and (x == y == z):
+                    cost = serverWallet.balance
+                    serverWallet.transaction(-abs(serverWallet.balance))
+                    self.sendmsg(
+                        '{} hit the jackpot! They have earned {} squids!'.format(msg.username, cost))
+                elif (x == y == z) and max(x, y, z) < 4:
+                    wallet.transaction(cost * cost * cost)
+                    self.sendmsg('{} matches 3 (three) fruits! [3x] Multiplyer (Bal: {})'.format(
+                        msg.username, wallet.balance))
+                elif 5 in (x, y, z) and len({x, y, z}) == 3:
+                    wallet.transaction(cost)
+                    self.sendmsg(
+                        '{} breaks even with 1 (one) jack. [1x] (Bal: {})'.format(msg.username, wallet.balance))
+                elif len({x, y, z}) == 2:
+                    wallet.transaction(0.5 * cost)
+                    self.sendmsg('{} matches 2! [0.5x] Multiplyer (Bal: {})'.format(
+                        msg.username, wallet.balance))
+                else:
+                    serverWallet.transaction(cost)
+                    self.sendmsg('{}, better luck next time. (Bal: {})'.format(
+                        msg.username, wallet.balance))
 
     def chat_love(self, msg, *args):
         data = {'msg': 'No love.'}
@@ -263,11 +305,17 @@ class Client(BaseNamespace):
                     msg['username'] = y['name']
                     msg['rank'] = y['rank']
 
-    def handout(self):
-        t = threading.Timer(60 * 61, self.handout)
+    @check_init
+    def jackpot_announce(self):
+        timeout = 15 * 60
+        if('jackpot' in self.timeout):
+            timeout = self.timeout['jackpot']
+        t = threading.Timer(timeout, self.jackpot_announce)
         t.daemon = True
         t.start()
-        self.sendmsg('$handout')
+        serverWallet = Wallet('{{server}}')
+        self.sendmsg('Current jackpot is: {} squids!'.format(
+            serverWallet.balance))
 
     @check_init
     def handle_msg(self, msg):
@@ -361,6 +409,7 @@ class Client(BaseNamespace):
         log.info('[Connected]')
 
     def on_login(self, *args):
+        self.jackpot_announce()
         if(not args[0]['success']):
             log.error(args[0]['error'])
             raise SystemExit

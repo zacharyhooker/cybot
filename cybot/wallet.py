@@ -21,7 +21,6 @@ class Wallet(SQLite):
         qry = '''CREATE TABLE IF NOT EXISTS wallet (username text UNIQUE, amount real, lasthandout timestamp)'''
         self.query(qry)
 
-
     def usercheck(self):
         return self.get('*')
 
