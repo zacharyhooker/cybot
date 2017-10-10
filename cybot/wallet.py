@@ -1,5 +1,4 @@
 from .dbwrapper import SQLite
-from datetime import datetime, timedelta
 
 
 class Wallet(SQLite):

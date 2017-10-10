@@ -4,7 +4,6 @@ import requests as req
 from .msg import Msg
 from .wallet import Wallet
 from .timer import Timer
-import math
 import threading
 from foaas import fuck
 import random

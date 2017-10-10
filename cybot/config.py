@@ -1,6 +1,6 @@
 from urllib.parse import urlparse
 import requests as req
-from socketIO_client_nexus import BaseNamespace, SocketIO
+from socketIO_client_nexus import SocketIO
 from .bot import Client
 
 
