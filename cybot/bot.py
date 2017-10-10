@@ -121,7 +121,7 @@ class Client(BaseNamespace):
                 x = int(random.triangular(0, 6, 2))
                 z = int(random.triangular(0, 6, 2))
                 y = int(random.triangular(0, 6, 2))
-                translate = ['🍇', '🍈', '🍋', '🂻', '♦']
+                translate = ['🍇', '🍈', '🍋', '🍌', '🂻', '♦']
                 self.sendmsg('| {} | {} | {} |'.format(
                     translate[x], translate[y], translate[z]))
                 if 5 in (x, y, z) and (x == y == z):
