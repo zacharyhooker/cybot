@@ -115,7 +115,7 @@ class Client(BaseNamespace):
                 self.sendmsg('Please place a numeric bet.')
                 return
             cost = abs(int(args[0][0]))
-            if wallet.balance > cost:
+            if wallet.balance >= cost:
                 wallet.transaction(-cost)
                 serverWallet = Wallet('{{server}}')
                 x = int(random.triangular(0, 6, 2))
@@ -123,7 +123,7 @@ class Client(BaseNamespace):
                 y = int(random.triangular(0, 6, 2))
                 prizemsg = ":botchat3:"
                 translate = ['🍇', '🍒', '🍋', '🍌', '🂻', '♦']
-                prizemsg = "| {} | {} | {} |\n".format(
+                prizemsg += "| {} | {} | {} |\n".format(
                     translate[x], translate[y], translate[z])
 
                 if 5 in (x, y, z) and (x == y == z):
