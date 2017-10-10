@@ -3,6 +3,7 @@ import requests as req
 from socketIO_client_nexus import BaseNamespace, SocketIO
 from .bot import Client
 
+
 def cytube(config):
     url = 'http://%s/socketconfig/%s.json' % ('cytu.be', config['channel'])
     server_list = req.get(url).json()['servers']

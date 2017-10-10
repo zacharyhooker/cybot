@@ -15,8 +15,10 @@ class SQLite:
         self.cursor = self.connection.cursor()
         return self.connection
 
-    def createtables(self):
-        qry = '''CREATE TABLE IF NOT EXISTS wallet (username text UNIQUE, amount real, lasthandout timestamp)'''
+    def maketable(self, table, columns):
+        qry = "CREATE TABLE IF NOT EXISTS {} ({})".format(
+            table, ', '.join('{} {}'.format(key, value)
+                             for key, value in columns.items()))
         self.query(qry)
 
     def get(self, table, columns, conditions=None, limit=None):
