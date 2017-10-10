@@ -121,30 +121,35 @@ class Client(BaseNamespace):
                 x = int(random.triangular(0, 6, 2))
                 z = int(random.triangular(0, 6, 2))
                 y = int(random.triangular(0, 6, 2))
-                translate = ['🍇', '🍈', '🍋', '🍌', '🂻', '♦']
-                self.sendmsg('| {} | {} | {} |'.format(
-                    translate[x], translate[y], translate[z]))
+                prizemsg = ":botchat3:"
+                translate = ['🍇', '🍒', '🍋', '🍌', '🂻', '♦']
+                prizemsg = "| {} | {} | {} |\n".format(
+                    translate[x], translate[y], translate[z])
+
                 if 5 in (x, y, z) and (x == y == z):
                     cost = serverWallet.balance
                     serverWallet.transaction(-abs(serverWallet.balance))
-                    self.sendmsg(
-                        '{} hit the jackpot! They have earned {} squids!'.format(msg.username, cost))
+                    prizemsg += '{} hit the jackpot! They have earned {} squids!'.format(
+                        msg.username, cost)
                 elif (x == y == z) and max(x, y, z) < 4:
                     wallet.transaction(cost * cost * cost)
-                    self.sendmsg('{} matches 3 (three) fruits! [3x] Multiplyer (Bal: {})'.format(
-                        msg.username, wallet.balance))
+                    prizemsg += '{} matches 3 (three) fruits! [3x] Multiplyer (Bal: {})'.format(
+                        msg.username, wallet.balance)
                 elif 5 in (x, y, z) and len({x, y, z}) == 3:
                     wallet.transaction(cost)
-                    self.sendmsg(
-                        '{} breaks even with 1 (one) jack. [1x] (Bal: {})'.format(msg.username, wallet.balance))
+                    prizemsg += '{} breaks even with 1 (one) jack. [1x] (Bal: {})'.format(
+                        msg.username, wallet.balance)
                 elif len({x, y, z}) == 2:
-                    wallet.transaction(0.5 * cost)
-                    self.sendmsg('{} matches 2! [0.5x] Multiplyer (Bal: {})'.format(
-                        msg.username, wallet.balance))
+                    wallet.transaction(1.1 * cost)
+                    prizemsg += '{} matches 2! [1.1x] Multiplyer (Bal: {})'.format(
+                        msg.username, wallet.balance)
                 else:
                     serverWallet.transaction(cost)
-                    self.sendmsg('{}, better luck next time. (Bal: {})'.format(
-                        msg.username, wallet.balance))
+                    prizemsg += '{}, better luck next time. (Bal: {})'.format(
+                        msg.username, wallet.balance)
+                self.sendmsg(prizemsg)
+            else:
+                self.sendmsg('Insufficient funds.')
 
     def chat_love(self, msg, *args):
         data = {'msg': 'No love.'}
