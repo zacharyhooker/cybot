@@ -122,7 +122,7 @@ class Client(BaseNamespace):
                 return
             else:
                 cost = abs(int(args[0][0]))
-                if wallet.balance > cost:
+                if wallet.balance >= cost:
                     wallet.transaction(-cost)
                     serverWallet = Wallet('{{server}}')
                     x = int(random.triangular(0, 6, 2))
