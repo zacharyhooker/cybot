@@ -3,12 +3,12 @@ import logging as log
 import requests as req
 from .msg import Msg
 from .wallet import Wallet
+from .timer import Timer
 import math
 import threading
 from foaas import fuck
 import random
 from socketIO_client_nexus import BaseNamespace
-from datetime import datetime, timedelta
 import re
 import sys
 import os
@@ -108,48 +108,56 @@ class Client(BaseNamespace):
     def chat_slots(self, msg, *args):
         if(args[0]):
             wallet = Wallet(msg.username)
+            timer = Timer(msg.username, 'slots')
             cost = 0
             if args[0][0].isdigit():
                 cost = -abs(int(args[0][0]))
             else:
                 self.sendmsg('Please place a numeric bet.')
                 return
-            cost = abs(int(args[0][0]))
-            if wallet.balance > cost:
-                wallet.transaction(-cost)
-                serverWallet = Wallet('{{server}}')
-                x = int(random.triangular(0, 6, 2))
-                z = int(random.triangular(0, 6, 2))
-                y = int(random.triangular(0, 6, 2))
-                prizemsg = ":botchat3:"
-                translate = ['🍇', '🍒', '🍋', '🍌', '🂻', '♦']
-                prizemsg = "| {} | {} | {} |\n".format(
-                    translate[x], translate[y], translate[z])
-
-                if 5 in (x, y, z) and (x == y == z):
-                    cost = serverWallet.balance
-                    serverWallet.transaction(-abs(serverWallet.balance))
-                    prizemsg += '{} hit the jackpot! They have earned {} squids!'.format(
-                        msg.username, cost)
-                elif (x == y == z) and max(x, y, z) < 4:
-                    wallet.transaction(cost * cost * cost)
-                    prizemsg += '{} matches 3 (three) fruits! [3x] Multiplyer (Bal: {})'.format(
-                        msg.username, wallet.balance)
-                elif 5 in (x, y, z) and len({x, y, z}) == 3:
-                    wallet.transaction(cost)
-                    prizemsg += '{} breaks even with 1 (one) jack. [1x] (Bal: {})'.format(
-                        msg.username, wallet.balance)
-                elif len({x, y, z}) == 2:
-                    wallet.transaction(1.1 * cost)
-                    prizemsg += '{} matches 2! [1.1x] Multiplyer (Bal: {})'.format(
-                        msg.username, wallet.balance)
-                else:
-                    serverWallet.transaction(cost)
-                    prizemsg += '{}, better luck next time. (Bal: {})'.format(
-                        msg.username, wallet.balance)
-                self.sendmsg(prizemsg)
+            chk = timer.check(self.timeout['slots'])
+            if(not chk['ready']):
+                timetil = int(chk['timetil'] / 60)
+                self.sendmsg('Try again in {} minute(s).'.format(timetil))
+                return
             else:
-                self.sendmsg('Insufficient funds.')
+                cost = abs(int(args[0][0]))
+                if wallet.balance > cost:
+                    wallet.transaction(-cost)
+                    serverWallet = Wallet('{{server}}')
+                    x = int(random.triangular(0, 6, 2))
+                    z = int(random.triangular(0, 6, 2))
+                    y = int(random.triangular(0, 6, 2))
+                    prizemsg = ":botchat3:"
+                    translate = ['🍇', '🍒', '🍋', '🍌', '🂻', '♦']
+                    prizemsg = "| {} | {} | {} |\n".format(
+                        translate[x], translate[y], translate[z])
+
+                    if 5 in (x, y, z) and (x == y == z):
+                        cost = serverWallet.balance
+                        serverWallet.transaction(-abs(serverWallet.balance))
+                        prizemsg += '{} hit the jackpot! They have earned {} squids!'.format(
+                            msg.username, cost)
+                    elif (x == y == z) and max(x, y, z) < 4:
+                        wallet.transaction(cost * cost * cost)
+                        prizemsg += '{} matches 3 (three) fruits! [3x] Multiplyer (Bal: {})'.format(
+                            msg.username, wallet.balance)
+                    elif 5 in (x, y, z) and len({x, y, z}) == 3:
+                        wallet.transaction(cost)
+                        prizemsg += '{} breaks even with 1 (one) jack. [1x] (Bal: {})'.format(
+                            msg.username, wallet.balance)
+                    elif len({x, y, z}) == 2:
+                        wallet.transaction(1.1 * cost)
+                        prizemsg += '{} matches 2! [1.1x] Multiplyer (Bal: {})'.format(
+                            msg.username, wallet.balance)
+                    else:
+                        serverWallet.transaction(cost)
+                        prizemsg += '{}, better luck next time. (Bal: {})'.format(
+                            msg.username, wallet.balance)
+                    self.sendmsg(prizemsg)
+                    timer.setTimer()
+                else:
+                    self.sendmsg('Insufficient funds.')
 
     def chat_love(self, msg, *args):
         data = {'msg': 'No love.'}
@@ -254,16 +262,13 @@ class Client(BaseNamespace):
     def chat_handout(self, msg, *args):
         amt = random.randint(1, 100)
         wallet = Wallet(msg.username)
-        last = datetime.strptime(wallet.lasthandout, '%Y-%m-%d %H:%M:%S')
-        td = timedelta(seconds=self.timeout['handout'])
-        print(wallet.creation)
-        if(wallet.creation):
-            td = timedelta(0)
-        if(datetime.now() - last > td):
-            wallet.handout(amt)
+        timer = Timer(msg.username, 'handout')
+        chk = timer.check(self.timeout['handout'])
+        if(chk['ready']):
+            wallet.transaction(amt)
+            timer.setTimer()
         else:
-            timetil = math.ceil(
-                ((last + td) - datetime.now()).total_seconds() / 60)
+            timetil = int(chk['timetil'] / 60)
             self.sendmsg(
                 'Try again in {} minute(s).'.format(timetil))
             return

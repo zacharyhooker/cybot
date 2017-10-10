@@ -1,4 +1,4 @@
-from dbwrapper import SQLite
+from .dbwrapper import SQLite
 from datetime import datetime, timedelta
 
 
@@ -10,28 +10,40 @@ class Timer(SQLite):
         self.conditions = 'username = "{0}"'.format(
             username)
         self.category = category
-        self.connect('../db/bot.db')
+        self.connect('db/bot.db')
         tabledata = {'username': 'text', 'category': 'text',
-                     'last': 'timestamp UNIQUE(username, category, last) ON CONFLICT REPLACE'}
-        self.maketables(
-            self.table, tabledata)
+                     'last': 'timestamp', '': 'UNIQUE(username, category) ON CONFLICT REPLACE'}
+        self.maketable(self.table, tabledata)
 
-    def setTimer(self, category, last=None):
+    def check(self, timeout, category=None):
+        last = self.getTimer(category if category else self.category)
+        ret = {'ready': False}
+        if last:
+            last = datetime.strptime(last[0], '%Y-%m-%d %H:%M:%S')
+            now = datetime.now()
+            td = timedelta(seconds=timeout)
+            if(now - last > td):
+                ret['ready'] = True
+            else:
+                ret['timetil'] = int(((last + td) - now).total_seconds())
+                ret['ready'] = False
+        else:
+            ret['ready'] = True
+            self.setTimer(category)
+        return ret
+
+    def setTimer(self, category=None, last=None):
         data = {'username': self.username,
-                'last': '#!datetime("now", "localtime")', 'category': category}
+                'last': '#!datetime("now", "localtime")', 'category': category if category else self.category}
         if last:
             data['last'] = last
         self.write(self.table, data)
 
-    def check(self, category=None):
-        catCond = category if category else self.category
-        last = self.last(catCond)
-        print(last)
-
-    def last(self, category=None):
-        if(category):
-            return self.get('last', conditions='category="{}"'.format(category))[0]
-        return self.get('last')[0]
+    def getTimer(self, category=None):
+        conditions = ['category="{}"'.format(
+            category if category else self.category)]
+        timerData = self.get('last', single=True, conditions=conditions)
+        return timerData
 
     def raw(self, category=None, last=None, username=None):
         cond = []
@@ -45,19 +57,11 @@ class Timer(SQLite):
             return self.get('*', conditions=cond)
         return self.get('*')
 
-    def reset(self, category=None, last=None):
-        catCond = category if category else self.category
-        data = {'last': 'datetime("now", "localtime")',
-                'category': '"{}"'.format(catCond)}
-        if last:
-            data['last'] = last
-        self.update(data)
-
     def get(self, columns, single=False, conditions=None, limit=None):
         formCond = self.conditions
         if conditions:
             formCond = '{} AND {}'.format(
-                self.conditions, ' and '.join(conditions))
+                self.conditions, ' and '.join(conditions) if conditions else '')
         qry = 'SELECT {0} FROM {1} WHERE {2};'.format(
             columns, self.table, formCond)
         self.query(qry)
@@ -77,12 +81,3 @@ class Timer(SQLite):
         qry = 'UPDATE {0} SET {1} WHERE {2}'.format(
             self.table, dqry, self.conditions)
         self.query(qry)
-
-
-x = Timer('zim', 'handout')
-print(x.last())
-x.reset()
-print(x.last())
-x.setTimer('slots')
-print(x.last('slots'))
-print(x.raw())
