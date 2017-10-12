@@ -105,7 +105,7 @@ class Client(BaseNamespace):
             if(wFrom.balance < amt):
                 omsg.to = msg.username
                 omsg.body = 'Give: Insufficient funds.'
-            elif(to in self.userlist):
+            elif(self.getUser(to)):
                 wTo = Wallet(args[0][0])
                 wFrom.transaction(-amt)
                 wTo.transaction(amt)
@@ -115,6 +115,11 @@ class Client(BaseNamespace):
                 omsg.body = 'The syntax is !give <username> <amount>'
                 omsg.to = msg.username
         self.sendmsg(omsg)
+
+    def getUser(self, name):
+        for usr in self.userlist:
+            if 'name' in usr and name in usr['name']:
+                return usr
 
     def chat_giphy(self, msg, *args):
         if(args[0]):
