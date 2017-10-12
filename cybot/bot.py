@@ -15,6 +15,7 @@ import giphypop
 
 import tmdbsimple as tmdb
 
+
 log.getLogger(__name__).addHandler(
     log.NullHandler())
 log.basicConfig(level=log.INFO)
@@ -94,6 +95,27 @@ class Client(BaseNamespace):
         if(msg.username == 'zim'):
             exit()
 
+    def chat_give(self, msg, *args):
+        omsg = msg
+        omsg.body = ''
+        if(len(args) > 0):
+            wFrom = Wallet(msg.username)
+            to = args[0][0]
+            amt = int(args[0][1])
+            if(wFrom.balance < amt):
+                omsg.to = msg.username
+                omsg.body = 'Give: Insufficient funds.'
+            elif(to in self.userlist):
+                wTo = Wallet(args[0][0])
+                wFrom.transaction(-amt)
+                wTo.transaction(amt)
+                omsg.body = '{} gave {} {} squids!'.format(
+                    msg.username, to, amt)
+            else:
+                omsg.body = 'The syntax is !give <username> <amount>'
+                omsg.to = msg.username
+        self.sendmsg(omsg)
+
     def chat_giphy(self, msg, *args):
         if(args[0]):
             x = self.giphy.search(' '.join(args[0]), rating='pg-13')
@@ -157,7 +179,9 @@ class Client(BaseNamespace):
                     self.sendmsg(prizemsg)
                     timer.setTimer()
                 else:
-                    self.sendmsg('Insufficient funds.')
+                    msg.to = msg.username
+                    msg.body = 'Slots: Insufficient funds.'
+                    self.sendmsg(msg)
 
     def chat_love(self, msg, *args):
         data = {'msg': 'No love.'}
@@ -395,6 +419,7 @@ class Client(BaseNamespace):
 
     def on_userlist(self, *args):
         self.userlist = args[0]
+        self.userlist.append(self.username)
         self.init = True
 
     def on_queue(self, *args):
