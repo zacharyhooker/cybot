@@ -419,7 +419,8 @@ class Client(BaseNamespace):
 
     def on_userlist(self, *args):
         self.userlist = args[0]
-        self.userlist.append(self.username)
+        print(self.userlist)
+        self.userlist.append({'name': self.username})
         self.init = True
 
     def on_queue(self, *args):
