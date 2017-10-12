@@ -116,6 +116,17 @@ class Client(BaseNamespace):
                 omsg.to = msg.username
         self.sendmsg(omsg)
 
+    def chat_help(self, msg, *args):
+        msg.to = msg.username
+        meth = dir(self)
+        lst = []
+        for cmd in meth:
+            if 'chat_' in cmd:
+                lst.append(cmd[5:])
+        msg.body = "This is an experimental feature, some of these may not work.\n"
+        msg.body += ', '.join(lst)
+        self.sendmsg(msg)
+
     def getUser(self, name):
         for usr in self.userlist:
             if 'name' in usr and name in usr['name']:
@@ -424,7 +435,6 @@ class Client(BaseNamespace):
 
     def on_userlist(self, *args):
         self.userlist = args[0]
-        print(self.userlist)
         self.userlist.append({'name': self.username})
         self.init = True
 
@@ -441,7 +451,7 @@ class Client(BaseNamespace):
 
     def on_userLeave(self, *args):
         self.userlist[:] = [d for d in self.userlist if d[
-            'name'] == args[0]['name']]
+            'name'] != args[0]['name']]
 
     def on_addUser(self, *args):
         self.userlist.append(args[0])
