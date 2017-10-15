@@ -5,6 +5,7 @@ from .msg import Msg
 from .wallet import Wallet
 from .timer import Timer
 import threading
+from functools import wraps
 from foaas import fuck
 import random
 from socketIO_client_nexus import BaseNamespace
@@ -36,6 +37,13 @@ def check_init(func):
             return func(self, *args, **kwargs)
     return wrapper
 
+def run_async(func):
+    @wraps(func)
+    def async_func(*args, **kwargs):
+        func_hl = threading.Thread(target = func, args = args, kwargs = kwargs)
+        func_hl.start()
+        return func_hl
+    return async_func
 
 class Client(BaseNamespace):
 
@@ -102,11 +110,14 @@ class Client(BaseNamespace):
             wFrom = Wallet(msg.username)
             to = args[0][0]
             amt = int(args[0][1])
-            if(wFrom.balance < amt):
+            if amt <= 0 or (to == msg.username):
+                omsg.to = msg.username
+                omsg.body = 'Bruh, really?'
+            elif(wFrom.balance < amt):
                 omsg.to = msg.username
                 omsg.body = 'Give: Insufficient funds.'
             elif(self.getUser(to)):
-                wTo = Wallet(args[0][0])
+                wTo = Wallet(to)
                 wFrom.transaction(-amt)
                 wTo.transaction(amt)
                 omsg.body = '{} gave {} {} squids!'.format(
@@ -367,6 +378,7 @@ class Client(BaseNamespace):
         self.sendmsg('Current jackpot is: {} squids!'.format(
             serverWallet.balance))
 
+    @run_async
     @check_init
     def handle_msg(self, msg):
         chatlog.info(msg)
@@ -414,6 +426,7 @@ class Client(BaseNamespace):
                 print(exc_type, fname, exc_tb.tb_lineno)
         return ret
 
+    @run_async
     def on_chatMsg(self, omsg):
         msg = Msg(omsg)
         self.handle_msg(msg)
