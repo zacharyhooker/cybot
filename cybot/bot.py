@@ -377,6 +377,16 @@ class Client(BaseNamespace):
         serverWallet = Wallet('{{server}}')
         self.sendmsg('Current jackpot is: {} squids!'.format(
             serverWallet.balance))
+        p = random.random()
+        if p < 0.0002:
+            bal = serverWallet.balance
+            amt = random.randint(int(bal / len(str(bal))), int(bal / 2))
+            user = random.choice(self.userlist)['name']
+            serverWallet.transaction(-amt)
+            userWallet = Wallet(user)
+            userWallet.transaction(amt)
+            self.sendmsg(
+                'The accountant made a mistake and {} got {} squids!'.format(user, amt))
 
     @run_async
     @check_init
