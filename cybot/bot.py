@@ -236,6 +236,12 @@ class Client(BaseNamespace):
         else: 
             return
 
+    def chat_hint(self, msg, *args):
+        if self.question:
+            body = ' '.join([''.join(random.sample(word, len(word))) for word
+                    in self.question['correct_answer'].split()])
+            self.sendmsg(body)
+
     def chat_love(self, msg, *args):
         data = {'msg': 'No love.'}
         if args[0]:
