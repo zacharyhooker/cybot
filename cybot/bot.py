@@ -220,6 +220,10 @@ class Client(BaseNamespace):
             body = '{}(Category: {}) {}'.format('['+sub+']' if sub else '', self.question['category'], html.unescape(self.question['question']))
             print(self.question)
             self.sendmsg(body)
+        else:
+            sub = 'True/False' if any(s in self.question['correct_answer'] for s in ('True', 'False')) else None
+            body = '{}(Category: {}) {}'.format('['+sub+']' if sub else '', self.question['category'], html.unescape(self.question['question']))
+            self.sendmsg(body)
 
     def chat_a(self, msg, *args):
         if(len(args[0])>0):
