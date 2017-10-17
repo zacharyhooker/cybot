@@ -13,6 +13,7 @@ import re
 import sys
 import os
 import giphypop
+import html#just fo' the trivia. Ew.
 
 import tmdbsimple as tmdb
 
@@ -57,6 +58,7 @@ class Client(BaseNamespace):
         self.poll = []
         self.media = []
         self.init = False
+        self.question = None
 
     def config(self, config):
         if 'response' in config:
@@ -209,6 +211,26 @@ class Client(BaseNamespace):
                     msg.to = msg.username
                     msg.body = 'Slots: Insufficient funds.'
                     self.sendmsg(msg)
+
+    def chat_trivia(self, msg, *args):
+        if not self.question:
+            r = req.get('https://opentdb.com/api.php?amount=1')
+            self.question = r.json()['results'][0]
+            sub = 'True/False' if any(s in self.question['correct_answer'] for s in ('True', 'False')) else None
+            body = '{}(Category: {}) {}'.format('['+sub+']' if sub else '', self.question['category'], html.unescape(self.question['question']))
+            print(self.question)
+            self.sendmsg(body)
+
+    def chat_a(self, msg, *args):
+        if(len(args[0])>0):
+            ans = ' '.join(args[0]).lower()
+            if(self.question['correct_answer'].lower() == ans):
+                w = Wallet(msg.username)
+                w.transaction(100)
+                self.sendmsg('{} got it right! (100 Squids)'.format(msg.username))
+                self.question=None
+        else: 
+            return
 
     def chat_love(self, msg, *args):
         data = {'msg': 'No love.'}
