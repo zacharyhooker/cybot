@@ -225,10 +225,18 @@ class Client(BaseNamespace):
             body = '{}(Category: {}) {}'.format('['+sub+']' if sub else '', self.question['category'], html.unescape(self.question['question']))
             self.sendmsg(body)
 
+    def chat_nq(self, msg, *args):
+        w = Wallet(msg.username)
+        if(w.balance >= 1000):
+            w.transaction(-1000)
+            self.question = None
+            self.sendmsg('{} spent 1000 perds to skip the question.\
+                    ({})'.format(msg.username, w.balance))
+
     def chat_a(self, msg, *args):
         if(len(args[0])>0):
             ans = ' '.join(args[0]).lower()
-            if(self.question['correct_answer'].lower() == ans):
+            if(html.unescape(self.question['correct_answer'].lower().rstrip().lstrip()) == ans):
                 w = Wallet(msg.username)
                 w.transaction(100)
                 self.sendmsg('{} got it right! (100 Squids)'.format(msg.username))
