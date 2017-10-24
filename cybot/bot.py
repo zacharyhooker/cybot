@@ -193,13 +193,15 @@ class Client(BaseNamespace):
                         wallet.transaction(cost * 3)
                         prizemsg += '{} matches 3 (three) fruits! [3x] Multiplyer (Bal: {})'.format(
                             msg.username, wallet.balance)
+                    elif 5 in (x,y,z) and len({x,y,z})==2:
+                        wallet.transaction(cost*2)
+                        prizemsg += '{} got a jack and two matches. [2x] (Bal: {})'.format(msg.username, wallet.balance)
                     elif 5 in (x, y, z) and len({x, y, z}) == 3:
                         wallet.transaction(cost)
-                        prizemsg += '{} breaks even with 1 (one) jack. [1x] (Bal: {})'.format(
-                            msg.username, wallet.balance)
+                        prizemsg += '{} breaks even with 1 (one) jack. [1x] (Bal: {})'.format( msg.username, wallet.balance)
                     elif len({x, y, z}) == 2:
-                        wallet.transaction(1.1 * cost)
-                        prizemsg += '{} matches 2! [1.1x] Multiplyer (Bal: {})'.format(
+                        wallet.transaction(2 * cost)
+                        prizemsg += '{} matches 2! [2x] Multiplyer (Bal: {})'.format(
                             msg.username, wallet.balance)
                     else:
                         serverWallet.transaction(cost)
@@ -230,7 +232,7 @@ class Client(BaseNamespace):
         if(w.balance >= 1000):
             w.transaction(-1000)
             self.question = None
-            self.sendmsg('{} spent 1000 perds to skip the question.\
+            self.sendmsg('{} spent 1000 squids to skip the question.\
                     ({})'.format(msg.username, w.balance))
 
     def chat_a(self, msg, *args):
