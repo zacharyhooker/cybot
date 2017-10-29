@@ -168,7 +168,7 @@ class Client(BaseNamespace):
 
             chk = timer.check(self.timeout['slots'])
             if(not chk['ready']):
-                timetil = int(chk['timetil'] / 60)
+                timetil = chk['timetil'] / 60
                 self.sendmsg('Try again in {} minute(s).'.format(timetil))
                 return
             else:
@@ -229,10 +229,10 @@ class Client(BaseNamespace):
 
     def chat_nq(self, msg, *args):
         w = Wallet(msg.username)
-        if(w.balance >= 1000):
-            w.transaction(-1000)
+        if(w.balance >= 100):
+            w.transaction(-100)
             self.question = None
-            self.sendmsg('{} spent 1000 squids to skip the question.\
+            self.sendmsg('{} spent 100 squids to skip the question.\
                     ({})'.format(msg.username, w.balance))
 
     def chat_a(self, msg, *args):
@@ -361,7 +361,7 @@ class Client(BaseNamespace):
             wallet.transaction(amt)
             timer.setTimer()
         else:
-            timetil = int(chk['timetil'] / 60)
+            timetil = chk['timetil'] / 60
             self.sendmsg(
                 'Try again in {} minute(s).'.format(timetil))
             return
