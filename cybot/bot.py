@@ -97,8 +97,6 @@ class Client(BaseNamespace):
         Stores all media in `media`. Flags the skips.
         """
         msg.to = msg.username
-        msg.body = "Be sure to tip your bot!"
-        self.sendmsg(msg)
         self.emit('voteskip', {})
 
     def pm_kill(self, msg, *args):
@@ -107,7 +105,7 @@ class Client(BaseNamespace):
 
     def chat_give(self, msg, *args):
         omsg = msg
-        omsg.body = ''
+        omsg.body = 'test'
         if(len(args) > 0):
             wFrom = Wallet(msg.username)
             to = args[0][0]
@@ -118,15 +116,15 @@ class Client(BaseNamespace):
             elif(wFrom.balance < amt):
                 omsg.to = msg.username
                 omsg.body = 'Give: Insufficient funds.'
-            elif(self.getUser(to)):
+            else:
                 wTo = Wallet(to)
                 wFrom.transaction(-amt)
                 wTo.transaction(amt)
                 omsg.body = '{} gave {} {} squids!'.format(
                     msg.username, to, amt)
-            else:
-                omsg.body = 'The syntax is !give <username> <amount>'
-                omsg.to = msg.username
+        else:
+            omsg.body = 'The syntax is !give <username> <amount>'
+            omsg.to = msg.username
         self.sendmsg(omsg)
 
     def chat_help(self, msg, *args):
@@ -176,9 +174,8 @@ class Client(BaseNamespace):
                 if wallet.balance >= cost:
                     wallet.transaction(-cost)
                     serverWallet = Wallet('{{server}}')
-                    x = int(random.triangular(0, 6, 2))
-                    z = int(random.triangular(0, 6, 2))
-                    y = int(random.triangular(0, 6, 2))
+                    lst = [0]*5 + [1]*5 + [2]*5+[3]*5+[4]*2+[5]
+                    x, y, z = random.choices(lst, k=3)
                     prizemsg = ":botchat3:"
                     translate = ['🍇', '🍒', '🍋', '🍌', '🂻', '♦']
                     prizemsg = "| {} | {} | {} |\n".format(
@@ -186,6 +183,7 @@ class Client(BaseNamespace):
 
                     if 5 in (x, y, z) and (x == y == z):
                         cost = serverWallet.balance
+                        wallet.transaction(cost)
                         serverWallet.transaction(-abs(serverWallet.balance))
                         prizemsg += '{} hit the jackpot! They have earned {} squids!'.format(
                             msg.username, cost)
