@@ -11,7 +11,7 @@ class SQLite:
             self.createtables()
 
     def connect(self, name):
-        self.connection = sql.connect(name)
+        self.connection = sql.connect(name, isolation_level=None)
         self.cursor = self.connection.cursor()
         return self.connection
 

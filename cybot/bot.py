@@ -14,7 +14,8 @@ import sys
 import os
 import giphypop
 import html#just fo' the trivia. Ew.
-
+from bs4 import BeautifulSoup as Soup
+from imgurpython import ImgurClient
 import tmdbsimple as tmdb
 
 
@@ -59,6 +60,8 @@ class Client(BaseNamespace):
         self.media = []
         self.init = False
         self.question = None
+        self.jumble = None
+        self.imgur = None
 
     def config(self, config):
         if 'response' in config:
@@ -76,6 +79,9 @@ class Client(BaseNamespace):
             self.timeout = config['timeout']
         if 'cost' in config:
             self.cost = config['cost']
+        if 'imgur' in config:
+            self.imgur = ImgurClient(config['imgur']['client_id'],
+            config['imgur']['client_secret'])
 
     def login(self, channel, username, password):
         """Simple login to the websocket. Emits the params to the
@@ -143,6 +149,23 @@ class Client(BaseNamespace):
             if 'name' in usr and name in usr['name']:
                 return usr
 
+    def x_imgur(self, msg, *args):
+        if(args[0]):
+            search = self.imgur.gallery_search(' '.join(args[0]), window='all',
+                    sort='time', page=0)
+        else:
+            search = self.imgur.gallery_random()
+        if len(search)>0:
+            item = random.choice(search)
+            if item.is_album:
+                choice = random.choice(self.imgur.get_album_images(item.id))
+                choice = choice.link
+            else:
+                choice = item.link
+        else:
+            out = 'There were no results for that request.'
+        self.emit('pm', {'msg': out, 'meta': {}, 'to': msg.to})
+
     def chat_giphy(self, msg, *args):
         if(args[0]):
             x = self.giphy.search(' '.join(args[0]), rating='pg-13')
@@ -177,7 +200,7 @@ class Client(BaseNamespace):
                     lst = [0]*5 + [1]*5 + [2]*5+[3]*5+[4]*2+[5]
                     x, y, z = random.choices(lst, k=3)
                     prizemsg = ":botchat3:"
-                    translate = ['🍇', '🍒', '🍋', '🍌', '🂻', '♦']
+                    translate = ['♥', '♣', '♠', '♪','♀', '♦']
                     prizemsg = "| {} | {} | {} |\n".format(
                         translate[x], translate[y], translate[z])
 
@@ -193,10 +216,10 @@ class Client(BaseNamespace):
                             msg.username, wallet.balance)
                     elif 5 in (x,y,z) and len({x,y,z})==2:
                         wallet.transaction(cost*2)
-                        prizemsg += '{} got a jack and two matches. [2x] (Bal: {})'.format(msg.username, wallet.balance)
+                        prizemsg += '{} got a diamond and two matches. [2x] (Bal: {})'.format(msg.username, wallet.balance)
                     elif 5 in (x, y, z) and len({x, y, z}) == 3:
                         wallet.transaction(cost)
-                        prizemsg += '{} breaks even with 1 (one) jack. [1x] (Bal: {})'.format( msg.username, wallet.balance)
+                        prizemsg += '{} breaks even with 1 (one) diamond. [1x] (Bal: {})'.format( msg.username, wallet.balance)
                     elif len({x, y, z}) == 2:
                         wallet.transaction(2 * cost)
                         prizemsg += '{} matches 2! [2x] Multiplyer (Bal: {})'.format(
@@ -218,12 +241,16 @@ class Client(BaseNamespace):
             self.question = r.json()['results'][0]
             sub = 'True/False' if any(s in self.question['correct_answer'] for s in ('True', 'False')) else None
             body = '{}(Category: {}) {}'.format('['+sub+']' if sub else '', self.question['category'], html.unescape(self.question['question']))
-            print(self.question)
             self.sendmsg(body)
         else:
             sub = 'True/False' if any(s in self.question['correct_answer'] for s in ('True', 'False')) else None
             body = '{}(Category: {}) {}'.format('['+sub+']' if sub else '', self.question['category'], html.unescape(self.question['question']))
             self.sendmsg(body)
+        if(self.question['type']=='multiple'):
+            choices = self.question['incorrect_answers']
+            choices.append(self.question['correct_answer'])
+            random.shuffle(choices)
+        #    self.sendmsg("Choices: {}".format(html.unescape(','.join(choices))))
 
     def chat_nq(self, msg, *args):
         w = Wallet(msg.username)
@@ -235,7 +262,7 @@ class Client(BaseNamespace):
 
     def chat_a(self, msg, *args):
         if(len(args[0])>0):
-            ans = ' '.join(args[0]).lower()
+            ans = html.unescape(' '.join(args[0]).lower())
             if(html.unescape(self.question['correct_answer'].lower().rstrip().lstrip()) == ans):
                 w = Wallet(msg.username)
                 w.transaction(100)
@@ -247,7 +274,7 @@ class Client(BaseNamespace):
     def chat_hint(self, msg, *args):
         if self.question:
             body = ' '.join([''.join(random.sample(word, len(word))) for word
-                    in self.question['correct_answer'].split()])
+                    in html.unescape(self.question['correct_answer']).split()])
             self.sendmsg(body)
 
     def chat_love(self, msg, *args):
@@ -270,8 +297,27 @@ class Client(BaseNamespace):
         self.sendmsg(Msg({'body': '{0} has {1} squids.'.format(
             msg.username, wallet.balance)}))
 
+    def chat_skin(self, msg, *args):
+        search = tmdb.Search()
+        body = 'No sexual parental guide found'
+        if len(args) > 0:
+            response = search.movie(query=' '.join(args[0]))
+            if search.results:
+                mid = search.results[0]['id']
+                movie = tmdb.Movies(mid)
+                info = movie.info()
+                if 'imdb_id' in info:
+                    t = req.get('https://www.imdb.com/title/'+info['imdb_id']+'/parentalguide')
+                    advise = Soup(t.content).find('section', id='advisory-nudity')
+                    if advise:
+                        body = ''
+                        items = advise.find_all('li', 'ipl-zebra-list__item')
+                        for item in items:
+                            body += item.contents[0].strip().replace('\n', '.').replace('-', ' ')
+        msg.body = '/sp '+body
+        self.sendmsg(msg)
+
     def chat_trailers(self, msg, *args):
-        print(msg)
         search = tmdb.Search()
         vids = {}
         msg.to = msg.username
@@ -297,12 +343,10 @@ class Client(BaseNamespace):
             self.sendmsg(msg)
             for user in self.userlist:
                 if(user['name'].lower() == msg.username.lower() and user['rank'] > 1):
-                    print('user authed')
                     if any(t['key'] in s for s in self.media):
                         msg.body = title + ' already exists in queue.'
                         self.sendmsg(msg)
                     else:
-                        print('queue')
                         self.queue(vid, True)
 
     def pm_debug(self, msg, *args):
@@ -335,6 +379,18 @@ class Client(BaseNamespace):
             msg.body = 'Thank you for rating, wzrd will be pleased!'
             self.sendmsg(msg)
 
+    def chat_j(self, msg, *args):
+        if(len(args[0]) > 0 and self.jumble):
+            if ' '.join(args[0]).lower() == self.jumble:
+                msg.body = "{} solved the jumble: {}. (50 squids)".format(msg.username,
+                        self.jumble)
+                wallet = Wallet(msg.username)
+                wallet.transaction(50)
+                self.jumble = None
+                self.sendmsg(msg)
+            else:
+                pass
+
     def chat_jumble(self, msg, *args):
         """Attempts to solve an anagram based on letters parsed from handle_msg
         Requests calls based on the arguments and the whole Msg.
@@ -343,12 +399,14 @@ class Client(BaseNamespace):
             match (str): The anagram which has been parsed from the Msg
             to be solved to an english word
         """
-        x = req.get('http://www.anagramica.com/best/' + args[0])
-        word = x.json()['best'][0]
-        log.info('Anagram Guessing:' + word)
-        if len(args[0]) == len(word):
-            data = {'body': '$j ' + word}
-            self.sendmsg(Msg(data))
+        if self.jumble:
+            msg.body = ''.join(random.sample(self.jumble, len(self.jumble)))
+        else:
+            word_site = "https://svnweb.freebsd.org/csrg/share/dict/words?view=co&content-type=text/plain"
+            r = req.get(word_site)
+            self.jumble = random.choice(r.text.splitlines()).lower()
+            msg.body = ''.join(random.sample(self.jumble, len(self.jumble)))
+        self.sendmsg(msg)
 
     def chat_handout(self, msg, *args):
         amt = random.randint(1, 100)
@@ -399,7 +457,6 @@ class Client(BaseNamespace):
 
     def sendadminmsg(self, msg):
         msg = {'username': None, 'rank': 0}
-        print(self.userlist)
         for y in self.userlist:
             if(not y['meta']['afk']):
                 if(msg['rank'] < y['rank']):
@@ -473,7 +530,7 @@ class Client(BaseNamespace):
                 log.error('Exception[%s]: %s' % (e, msg))
                 exc_type, exc_obj, exc_tb = sys.exc_info()
                 fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                print(exc_type, fname, exc_tb.tb_lineno)
+                log.error(exc_type, fname, exc_tb.tb_lineno)
         return ret
 
     @run_async
@@ -489,12 +546,10 @@ class Client(BaseNamespace):
 
     def on_newPoll(self, *args):
         self.poll = []
-        print(args)
         for poll in args:
             if 'options' in poll:
                 for opt in poll['options']:
                     self.poll.append(opt)
-        print(self.poll)
 
     def on_userlist(self, *args):
         self.userlist = args[0]
@@ -521,6 +576,9 @@ class Client(BaseNamespace):
 
     def on_connect(self):
         log.info('[Connected]')
+
+    def on_disconnect(self):
+        raise Exception('disconnected')
 
     def on_login(self, *args):
         self.jackpot_announce()
