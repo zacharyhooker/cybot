@@ -1,5 +1,5 @@
 giphypop==0.3
-requests==2.17.3
+requests>=2.20.0
 tmdbsimple==1.7.0
 foaas==0.2.0
 socketIO_client_nexus==0.7.6
